@@ -4,8 +4,7 @@ UART Serial Library
 This is a simplified port of Arduino's `Serial` library.
 
 My problem with many examples of serial communication on the internet,
-is they all seem to have this line for sending a character on the TX
-line:
+is they all seem to use these two lines for sending a character:
 
 ```cpp
 while (UCSR0A & (1<<UDRE0));
@@ -16,7 +15,7 @@ The while loop is completely blocking. I have something against code that just
 sits around and blocks everything while waiting for something to happen.
 
 The good news is that there is an under documented feature on most (all?) atmegas --
-An interrupt that is called when the TX register is ready to receive a byte:
+an interrupt that is called when the TX register is ready to receive a byte:
 
 
 ```cpp
