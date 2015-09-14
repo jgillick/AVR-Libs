@@ -9,10 +9,8 @@ int main(void){
   while(1) {
     if (Serial.available()) {
       Serial.print("\nReceived: ");
-      while (Serial.available()) {
-        Serial.write(Serial.read());
-        Serial.print("\n");
-      }
+      Serial.write(Serial.read());
+      Serial.print("\n");
     }
   }
   return -1;
