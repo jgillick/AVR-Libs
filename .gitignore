@@ -3,6 +3,7 @@
 *.hex
 *.eeprom
 *.lst
+*.map
 
 # Compiled Object files
 *.slo
