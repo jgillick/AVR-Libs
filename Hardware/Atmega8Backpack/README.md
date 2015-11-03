@@ -9,3 +9,6 @@ So I made a little breakout board that conveniently fits right over my Atmega*8 
 The initial prototype just broke out the ICSP header block, the new version has headers for an FTDI cable, a power indicator LED and a reset button.
 
 [More info](https://hackaday.io/project/8093-atmega8-breadboard-backpack)
+
+![Backpack and chip](http://i.imgur.com/fN1hqkb.jpg)
+![Backpack on breadboard](http://i.imgur.com/KIbh1eD.jpg)
