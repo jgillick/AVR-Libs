@@ -4,8 +4,8 @@
 ##########    Check these every time you start a new project    ##########
 ##########------------------------------------------------------##########
 
-MCU   = atmega328p
-F_CPU = 20000000UL
+MCU   = atmega168
+F_CPU = 16000000UL
 
 ##  FUSE SETTINGS
 LFUSE = 0xFF
@@ -118,7 +118,9 @@ disasm: disassemble
 # Optionally show how big the resulting program is
 size:  $(TARGET).elf
 	@$(AVRSIZE) -A $(TARGET).elf
+ifneq ($(shell which $(AVRMEM)), )
 	@$(AVRMEM) $(TARGET).elf $(MCU)
+endif
 
 
 clean:
