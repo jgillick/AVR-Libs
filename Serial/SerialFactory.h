@@ -44,7 +44,9 @@ class SerialFactory {
 
     void write(uint8_t);
     void print(const char*);
+    void print(uint16_t);
 
+    inline void print(uint32_t n) { write(n); }
     inline void write(uint32_t n) { write((uint8_t)n); }
     inline void write(int32_t n) { write((uint8_t)n); }
     inline void write(uint16_t n) { write((uint8_t)n); }

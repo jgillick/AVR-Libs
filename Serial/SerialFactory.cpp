@@ -111,6 +111,13 @@ void SerialFactory::print(const char *str) {
   }
 }
 
+void SerialFactory::print(uint16_t n) {
+  // Convert long to string
+  char buffer [sizeof(long)*8+1];
+  ltoa(n, buffer, 10);
+  print(buffer);
+}
+
 // Send the next byte off the TX buffer
 void SerialFactory::_sendNextByte() {
 	if (_tx_buffer_head == _tx_buffer_tail) return;
