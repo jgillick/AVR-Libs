@@ -17,8 +17,8 @@ This is especially handy when you need to pass a pin configuration
 to a function or library:
 
 ```cpp
-#include <util/delay.h>
 #include "ioport.h"
+#include <util/delay.h>
 
 void flashPin(IOPin *pin) {
   led_pin->as_output();
