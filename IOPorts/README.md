@@ -1,9 +1,9 @@
 # IO Ports
 
 This is a simple wrapper that makes it easy to encapsulate the relationship
-between ports, pins and direction registers. 
+between a pin and all it's registers (`PORT`, `PIN`, `DDR`).
 
-For example, this initializes pin PB0 to output and sets it HIGH:
+For example, this initializes pin `PB0` to output and sets it `HIGH`:
 
 ```cpp
 
@@ -42,17 +42,17 @@ in `ioport.h`.
 
 ## Optional helpers methods
 
-The API defines the following optional helper methods:
+The API defines the following helper methods:
 
 * `void as_output()` -- Set the pin to be output
 * `void as_input()`  -- Set the pin to be input
-* `void set(uint8_t value = 1)` -- Set the pin to HIGH (1) or LOW (0)
-* `value()` -- Returns 1 if the input is HIGH
+* `void set(uint8_t value)` -- Set the pin to HIGH (1) or LOW (0). Defaults to HIGH if no value is passed.
+* `uint8_t value()` -- Returns 1 if the input is HIGH
 
 
 # Accessing the registers
 
-You can still access the registers directly, if you wish. 
+You can still access the registers directly if you wish. 
 The following is identical to the first example:
 
 ```cpp
