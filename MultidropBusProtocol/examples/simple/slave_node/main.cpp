@@ -27,16 +27,13 @@ int main() {
 
   while(1) {
     slave.read();
-    if (slave.isReady()){
+    if (slave.isReady() && slave.isAddressedToMe() && slave.getCommand() == 0x01) {
+      ledOn = slave.getData()[0];
 
-      if(slave.getCommand() == 0x01) {
-        ledOn = slave.getData()[0];
-
-        if (ledOn) {
-          PORTB |= (1 << PB0);
-        } else {
-          PORTB &= ~(1 << PB0);
-        }
+      if (ledOn) {
+        PORTB |= (1 << PB0);
+      } else {
+        PORTB &= ~(1 << PB0);
       }
       slave.reset();
     }

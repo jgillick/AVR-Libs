@@ -28,11 +28,15 @@ public:
   // returns 1 if a new message is ready
   uint8_t read();
 
+  // Reset the state of the message back to listing/parsing
+  void reset();
+
   // Is the message ready to be read
   uint8_t isReady();
 
-  // Reset the state of the message back to listing/parsing
-  void reset();
+  // Is this message addressed to our node 
+  // (directly or indirectly via a broadcast message)
+  uint8_t isAddressedToMe();
 
   // The message command
   uint8_t getCommand();
