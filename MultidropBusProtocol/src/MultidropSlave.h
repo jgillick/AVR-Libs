@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "Multidrop.h"
 
-typedef void (*multidropResponseFunction)(uint8_t command, uint8_t len, uint8_t& data);
+typedef uint8_t* (*multidropResponseFunction)(uint8_t command, uint8_t len);
 
 #ifndef MD_MAX_DATA_LEN
 #define MD_MAX_DATA_LEN 10
@@ -52,10 +52,6 @@ public:
 
   // Does this message require a response.
   uint8_t isResponseMessage();
-
-  // Set the response for this batch message
-  void setResponse(uint8_t val);
-  void setResponse(uint8_t *buf, uint8_t len);
 
   // Set to the function that will provide the proper
   // data for a response message. It is  best to keep

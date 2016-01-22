@@ -7,6 +7,7 @@
 MultidropSlave::MultidropSlave(MultidropData *_serial) : Multidrop(_serial) {
   flags = 0;
   myAddress = 0;
+  responseHandler = 0;
   parseState = NO_MESSAGE;
 }
 
@@ -44,6 +45,10 @@ uint8_t MultidropSlave::getCommand() {
 
 void MultidropSlave::setAddress(uint8_t addr) {
   myAddress = addr;
+}
+
+void MultidropSlave::setResponseHandler(multidropResponseFunction handler) {
+  responseHandler = handler;
 }
 
 void MultidropSlave::startMessage() {
@@ -174,8 +179,17 @@ void MultidropSlave::processData(uint8_t b) {
   parsePos = DATA_POS;
   fullDataIndex++;
 
-  // If we're still in our data section, fill data buffer
-  if (fullDataIndex >= dataStartOffset && dataIndex < length){
+  // Provide a response to fill our data section
+  if (isResponseMessage() && fullDataIndex == dataStartOffset && responseHandler) {
+    uint8_t i;
+    uint8_t *res = responseHandler(command, length);
+    for (i = 0; i < length; i++) {
+      serial->write(res[i]);
+    }
+  }
+
+  // If we're in our data section, fill data buffer
+  else if (fullDataIndex >= dataStartOffset && dataIndex < length){
     dataBuffer[dataIndex++] = b;
     dataBuffer[dataIndex] = '\0';
   }
