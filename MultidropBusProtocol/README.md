@@ -19,7 +19,7 @@ A full message would look something like this:
 
 ```
    Start                  Header                  Data   End
-  ---'---   ----------------'------------------  --'--  --'--
+  -------   -----------------------------------  -----  -----
  0xFF 0xFF  <Flags> <Address> <Command> <length> <Data> <CRC>
 
  0xFF 0xFF  - The start of the message
