@@ -13,7 +13,10 @@ HFUSE = 0xDA
 EFUSE = 0x05
 
 ## A directory for common include files
-LIBDIR = ..
+LIBDIR = .
+
+## Other source files (*.cpp, *c)
+# SOURCES = ../other_library/*.cpp
 
 ##########------------------------------------------------------##########
 ##########                 Programmer Defaults                  ##########
@@ -55,7 +58,7 @@ TARGET = $(lastword $(subst /, ,$(CURDIR)))
 # Object files: will find all .cpp/.h files in current directory
 #  and in LIBDIR.  If you have any other (sub-)directories with code,
 #  you can add them in to SOURCES below in the wildcard statement.
-SOURCES=$(wildcard *.c *.cpp $(LIBDIR)/*.c $(LIBDIR)/*.cpp)
+SOURCES=$(wildcard *.c *.cpp $(LIBDIR)/*.c $(LIBDIR)/*.cpp $SOURCES)
 OBJECTS=$(SOURCES:.cpp=.o)
 HEADERS=$(SOURCES:.cpp=.h)
 
