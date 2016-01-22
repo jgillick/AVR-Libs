@@ -2,7 +2,7 @@
 #include "MultidropSlave.h"
 #include <util/crc16.h>
 
-#define SOM 0xff
+#define SOM 0xFF
 
 MultidropSlave::MultidropSlave(MultidropData *_serial) : Multidrop(_serial) {
   flags = 0;

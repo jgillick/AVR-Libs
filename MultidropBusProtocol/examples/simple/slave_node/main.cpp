@@ -23,7 +23,7 @@ int main() {
   serial.begin(9600);
 
   MultidropSlave slave(&serial);
-  slave.setAddress(2);
+  slave.setAddress(1);
 
   while(1) {
     slave.read();
