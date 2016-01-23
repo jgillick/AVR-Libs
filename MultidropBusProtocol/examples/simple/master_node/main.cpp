@@ -10,12 +10,12 @@
 #include <util/delay.h>
 
 #include "MultidropMaster.h"
-#include "MultidropUart.h"
+#include "MultidropDataUart.h"
 
 #define NODE_COUNT 1
 
 int main() {
-  MultidropUart serial;
+  MultidropDataUart serial;
   serial.begin(9600);
 	MultidropMaster master(&serial);
 
@@ -23,7 +23,7 @@ int main() {
   master.setNodeLength(NODE_COUNT);
   while(1) {
 
-    master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, 1);
+    master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, true);
 
     // Send alternating 1s and 0s
     for (i = 0; i < NODE_COUNT; i++) {

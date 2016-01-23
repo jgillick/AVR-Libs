@@ -9,17 +9,18 @@
 #include <stdint.h>
 
 #include "MultidropSlave.h"
-#include "MultidropUart.h"
+#include "MultidropDataUart.h"
 
 #define NODE_COUNT 5
 
 int main() {
   uint8_t ledOn = 0;
 
+  // LED on PB0
   DDRB |= (1 << PB0);
   PORTB &= ~(1 << PB0);
 
-  MultidropUart serial;
+  MultidropDataUart serial;
   serial.begin(9600);
 
   MultidropSlave slave(&serial);

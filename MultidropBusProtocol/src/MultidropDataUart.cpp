@@ -1,5 +1,5 @@
 
-#include "MultidropUart.h"
+#include "MultidropDataUart.h"
 #include <avr/interrupt.h>
 
 ////////////////////////////////////////////
@@ -53,10 +53,10 @@ static volatile uint8_t rx_buffer_tail;
 ////////////////////////////////////////////
 /// Class members
 ////////////////////////////////////////////
-MultidropUart::MultidropUart() { }
+MultidropDataUart::MultidropDataUart() { }
 
 // Hook into the UART and start receiving data
-void MultidropUart::begin(uint32_t baud) {
+void MultidropDataUart::begin(uint32_t baud) {
   UART0_UCSRA = 0;
 
   // Endable TX/RX
@@ -75,7 +75,7 @@ void MultidropUart::begin(uint32_t baud) {
 }
 
 // Write something to the TX line
-void MultidropUart::write(uint8_t c) {
+void MultidropDataUart::write(uint8_t c) {
 
   // If buffer is empty and the register is ready to be written
   // to, send it directly
@@ -96,7 +96,7 @@ void MultidropUart::write(uint8_t c) {
 }
 
 // Read a byte from the RX buffer
-uint8_t MultidropUart::read() {
+uint8_t MultidropDataUart::read() {
   // if the head isn't ahead of the tail, we don't have any characters
   if (RX_BUFFER_EMPTY()) {
     return -1;
@@ -108,18 +108,18 @@ uint8_t MultidropUart::read() {
 }
 
 // How many bytes are available in the RX buffer
-uint8_t MultidropUart::available() {
+uint8_t MultidropDataUart::available() {
   return ((uint8_t)(UART0_RX_BUFFER_SIZE + rx_buffer_head - rx_buffer_tail)) % UART0_RX_BUFFER_SIZE;
 }
 
 // Clears the RX buffer
-void MultidropUart::clear() {
+void MultidropDataUart::clear() {
   rx_buffer_head = 0;
   rx_buffer_tail = 0;
 }
 
 // Send everything in the TX buffer with blocking
-void MultidropUart::flush() {
+void MultidropDataUart::flush() {
   while (!TX_BUFFER_EMPTY()) {
     uartSendNextByte();
   }

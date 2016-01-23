@@ -1,13 +1,13 @@
 
-#ifndef MultidropUart_H
-#define MultidropUart_H
+#ifndef MultidropDataUart_H
+#define MultidropDataUart_H
 
 #include "MultidropData.h"
 #include <avr/io.h>
 
-class MultidropUart : public MultidropData {
+class MultidropDataUart : public MultidropData {
 public:
-  MultidropUart();
+  MultidropDataUart();
 
   void begin(uint32_t);
   void end();
