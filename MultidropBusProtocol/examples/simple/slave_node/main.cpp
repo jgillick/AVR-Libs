@@ -11,7 +11,7 @@
 #include "MultidropSlave.h"
 #include "MultidropDataUart.h"
 
-#define NODE_COUNT 5
+#define NODE_ADDRESS 1
 
 int main() {
   uint8_t ledOn = 0;
@@ -24,7 +24,7 @@ int main() {
   serial.begin(9600);
 
   MultidropSlave slave(&serial);
-  slave.setAddress(1);
+  slave.setAddress(NODE_ADDRESS);
 
   while(1) {
     slave.read();
