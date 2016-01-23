@@ -1,3 +1,6 @@
+
+#include <util/crc16.h>
+
 #include "MultidropMaster.h"
 
 #define BATCH_FLAG            0b00000001
@@ -12,12 +15,12 @@ void MultidropMaster::setNodeLength(uint8_t num) {
   nodeNum = num;
 }
 
-uint8_t MultidropMaster::startMessage(uint8_t command, 
-                                      uint8_t destination, 
+uint8_t MultidropMaster::startMessage(uint8_t command,
+                                      uint8_t destination,
                                       uint8_t dataLength,
-                                      uint8_t batchMode, 
+                                      uint8_t batchMode,
                                       uint8_t responseMessage) {
-  
+
   state = 0;
   messageCRC = ~0;
 
@@ -42,11 +45,19 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
     sendByte(nodeNum);
   }
   sendByte(dataLength);
-  
+
   receiveMode();
 
   state = HEADER_SENT;
   return 1;
+}
+
+void MultidropMaster::setResponseSettings(uint8_t *buff, uint8_t timeout, uint8_t *defaultResponse) {
+
+}
+
+uint8_t hasAllResponses(uint16_t time) {
+  return 0;
 }
 
 uint8_t MultidropMaster::sendData(uint8_t d) {
@@ -68,8 +79,15 @@ uint8_t MultidropMaster::sendData(uint8_t *data, uint16_t len) {
     sendData(data[i]);
   }
   receiveMode();
-  
+
   return 1;
+}
+
+void MultidropMaster::sendByte(uint8_t b, uint8_t updateCRC) {
+  serial->write(b);
+  if (updateCRC) {
+    messageCRC = _crc16_update(messageCRC, b);
+  }
 }
 
 uint8_t MultidropMaster::finishMessage() {

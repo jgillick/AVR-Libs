@@ -19,20 +19,6 @@ public:
 
   Multidrop(MultidropData*);
 
-  // Sets the address of this node 
-  // (0 makes this node master -- there can only be 1 on the bus)
-  void setMyAddress(uint8_t);
-
-  // Is there a new message
-  uint8_t isReady();
-
-  // The message command for the latest received message
-  uint8_t getCommand();
-
-  // Set the response for a message
-  void setResponse(uint8_t val);
-  void setResponse(uint8_t *buf, uint8_t len);
-
   // Return the body of the message
   uint8_t* getBody();
 
@@ -50,17 +36,11 @@ protected:
 
   uint16_t messageCRC;
 
-  uint8_t buffer[MSG_BUFFER_LEN];
-
   // Put the bus transceiver in TX mode
   void sendMode();
 
   // Put the bus transceiver in RX mode
   void receiveMode();
-
-  // Send a byte to the serial stream and 
-  // update the messageCRC value
-  void sendByte(uint8_t b, uint8_t updateCRC=1);
 };
 
 #endif
