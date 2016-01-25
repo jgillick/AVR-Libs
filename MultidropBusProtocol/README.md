@@ -6,7 +6,7 @@ In this protocol, master facilitates all message and responses on the bus.
 ## Implemenation Quickstart 
 
 This is the most basic master/server setup where the slave node address is known and master 
-just sends messages. (see the [simple example](https://github.com/jgillick/AVR-Libs/tree/master/MultidropBusProtocol/examples/simple))
+just sends messages. (see the [simple example](/MultidropBusProtocol/examples/simple))
 
 ### Slave
 
@@ -56,7 +56,7 @@ the slave to receive the next message.
 
 ### Examples
 
-There are more complex examples in the [examples directory](/jgillick/AVR-Libs/blob/master/MultidropBusProtocol/examples/).
+There are more complex examples in the [examples directory](/MultidropBusProtocol/examples/).
 
 ## Communication Protocol Overview
 
