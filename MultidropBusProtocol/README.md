@@ -54,6 +54,10 @@ in order to read new bytes from the data source. When a full message has been re
 will return `true`. After you've finished processing the message, you must call `reset()` to free up 
 the slave to receive the next message.
 
+### Examples
+
+There are more complex examples in the [examples directory](/jgillick/AVR-Libs/blob/master/MultidropBusProtocol/examples/).
+
 ## Communication Protocol Overview
 
 This bus assumes that all nodes have addresses from 1 (master) - 255 (see Addressing section). 
