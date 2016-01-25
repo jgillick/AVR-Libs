@@ -44,7 +44,7 @@ master.finishMessage();
 
 ### Explanation
 
-Both master and slave nodes need a way to communicate to eachother. So the first thing you need to do
+Both master and slave nodes need a way to communicate to each other. So the first thing you need to do
 is initialize a data object. In this case `MultidropDataUart` communicates over the main UART line.
 There's also a `MultidropData485`, which can be used to communicate via RS485 transceivers. You can 
 easily create your own data class by extending `MultidropData`.
