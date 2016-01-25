@@ -78,7 +78,7 @@ LDFLAGS += -Wl,--gc-sections
 ## LDFLAGS += -Wl,-u,vfprintf -lprintf_min      ## for smaller printf
 TARGET_ARCH = -mmcu=$(MCU)
 
-all: $(TARGET).hex
+all: $(TARGET).hex size
 
 ## Explicit pattern rules:
 .c.o: $(HEADERS)
