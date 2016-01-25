@@ -3,6 +3,57 @@
 A versatile communication protocol for a multi-drop master/slave bus (like RS485).
 In this protocol, master facilitates all message and responses on the bus.
 
+## Implemenation Quickstart 
+
+This is the most basic master/server setup where the slave node address is known and master 
+just sends messages. (see the [simple example](https://github.com/jgillick/AVR-Libs/tree/master/MultidropBusProtocol/examples/simple))
+
+### Slave
+
+```c
+MultidropDataUart serial;
+MultidropSlave slave(&serial);
+
+serial.begin(9600);
+slave.setAddress(0x01);
+
+while(1) {
+  slave.read();
+  if (slave.isReady() && slave.isAddressedToMe()) {
+    // Do something with the received message
+    // See: slave.getCommand() and slave.getData()
+    slave.reset();
+  }
+}
+```
+
+### Master
+
+```c
+MultidropDataUart serial;
+MultidropMaster master(&serial);
+
+serial.begin(9600);
+
+// send command 0xA1, to node 1, message data length will be 2
+master.startMessage(0xA1, 0x01, 2); 
+master.sendData('H');
+master.sendData('i');
+master.finishMessage();
+```
+
+### Explanation
+
+Both master and slave nodes need a way to communicate to eachother. So the first thing you need to do
+is initialize a data object. In this case `MultidropDataUart` communicates over the main UART line.
+There's also a `MultidropData485`, which can be used to communicate via RS485 transceivers. You can 
+easily create your own data class by extending `MultidropData`.
+
+The rest is probably self expanatory. The slave nodes will need to call the `read()` method regularly 
+in order to read new bytes from the data source. When a full message has been received, `isReady()`
+will return `true`. After you've finished processing the message, you must call `reset()` to free up 
+the slave to receive the next message.
+
 ## Communication Protocol Overview
 
 This bus assumes that all nodes have addresses from 1 (master) - 255 (see Addressing section). 
