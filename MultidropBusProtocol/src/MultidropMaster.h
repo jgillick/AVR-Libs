@@ -25,16 +25,18 @@ public:
   // When sending a response request message, we need three more values:
   //   * buff: The buffer to store the responses for all nodes. This needs to be initialized
   //        large enough for everything (number of nodes * size of response for each).
+  //   * time: The current system time (used for timeout).
   //   * timeout: How long master will wait for any node to respond. You will need to call
   //        setTime frequently to let master know what the current time is.
   //   * defaultResponse: If a node doesn't respond by the timeout, this is the response that
   //        is registered for that node. This must be an array, the same length as the expected
   //        node response.
-  void setResponseSettings(uint8_t *buff, uint8_t timeout, uint8_t *defaultResponse);
+  void setResponseSettings(uint8_t buff[], uint16_t time, uint16_t timeout, uint8_t defaultResponse[]);
 
-  // Call this regularly when waiting for responses to keep an accurate time
-  // for the node timeous
-  uint8_t hasAllResponses(uint16_t time);
+  // Call regularly to check for node responses.
+  //  - time: Used to keep accurate time and timeout nodes who take too long to respond
+  // Return: true when all nodes have responded
+  uint8_t checkForResponses(uint16_t time);
 
   // Send a single byte of data
   uint8_t sendData(uint8_t data);
@@ -52,9 +54,18 @@ private:
     DATA_SENDING
   };
 
+  uint16_t timeoutTime,
+           timeoutDuration,
+           responseIndex;
+
   uint8_t  nodeNum,
            destAddress,
-           state;
+           dataLength,
+           state,
+           waitingOnNodes;
+
+  uint8_t *responseBuff,
+          *defaultResponseValues;
 
   // Send a byte and, optionally, update the messageCRC value
   void sendByte(uint8_t b, uint8_t updateCRC=1);
