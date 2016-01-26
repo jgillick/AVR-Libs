@@ -19,10 +19,9 @@ slave.setAddress(0x01);
 
 while(1) {
   slave.read();
-  if (slave.isReady() && slave.isAddressedToMe()) {
+  if (slave.hasNewMessage() && slave.isAddressedToMe()) {
     // Do something with the received message
     // See: slave.getCommand() and slave.getData()
-    slave.reset();
   }
 }
 ```
@@ -50,9 +49,8 @@ There's also a `MultidropData485`, which can be used to communicate via RS485 tr
 easily create your own data class by extending `MultidropData`.
 
 The rest is probably self expanatory. The slave nodes will need to call the `read()` method regularly 
-in order to read new bytes from the data source. When a full message has been received, `isReady()`
-will return `true`. After you've finished processing the message, you must call `reset()` to free up 
-the slave to receive the next message.
+in order to read new bytes from the data source. When a full message has been received, `hasNewMessage()`
+will return `true`.
 
 ### Examples
 

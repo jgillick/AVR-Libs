@@ -28,11 +28,8 @@ public:
   // returns 1 if a new message is ready
   uint8_t read();
 
-  // Reset the state of the message back to listing/parsing
-  void reset();
-
-  // Is the message ready to be read
-  uint8_t isReady();
+  // There a new message ready to read
+  uint8_t hasNewMessage();
 
   // Is this message addressed to our node 
   // (directly or indirectly via a broadcast message)
@@ -52,7 +49,7 @@ public:
 
   // Does this message require a response.
   uint8_t isResponseMessage();
-  
+
   // Is the current message in batch mode
   uint8_t inBatchMode();
 

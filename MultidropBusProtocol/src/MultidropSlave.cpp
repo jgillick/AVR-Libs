@@ -11,16 +11,12 @@ MultidropSlave::MultidropSlave(MultidropData *_serial) : Multidrop(_serial) {
   parseState = NO_MESSAGE;
 }
 
-void MultidropSlave::reset() {
-  parseState = NO_MESSAGE;
-}
-
-uint8_t MultidropSlave::isReady() {
+uint8_t MultidropSlave::hasNewMessage() {
   return parseState == MESSAGE_READY;
 }
 
 uint8_t MultidropSlave::isAddressedToMe() {
-  return isReady() && (address == myAddress || address == BROADCAST_ADDRESS);
+  return hasNewMessage() && (address == myAddress || address == BROADCAST_ADDRESS);
 }
 
 uint8_t MultidropSlave::inBatchMode() {
@@ -67,6 +63,11 @@ void MultidropSlave::startMessage() {
 }
 
 uint8_t MultidropSlave::read() {
+  // Move onto the next message
+  if (hasNewMessage()) {
+    parseState = NO_MESSAGE;
+  }
+
   while (serial->available()) {
     if(parse(serial->read()) == 1 && !isResponseMessage()) {
       return 1;

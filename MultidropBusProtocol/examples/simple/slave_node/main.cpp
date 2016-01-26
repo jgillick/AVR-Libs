@@ -28,7 +28,7 @@ int main() {
 
   while(1) {
     slave.read();
-    if (slave.isReady() && slave.isAddressedToMe() && slave.getCommand() == 0x01) {
+    if (slave.hasNewMessage() && slave.isAddressedToMe() && slave.getCommand() == 0x01) {
       ledOn = slave.getData()[0];
 
       if (ledOn) {
@@ -36,7 +36,6 @@ int main() {
       } else {
         PORTB &= ~(1 << PB0);
       }
-      slave.reset();
     }
   }
 }
