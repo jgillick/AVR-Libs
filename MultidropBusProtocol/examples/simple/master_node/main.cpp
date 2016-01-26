@@ -15,14 +15,15 @@
 #define NODE_COUNT 1
 
 int main() {
+  uint8_t iteration = 1, i = 0;
+
   MultidropDataUart serial;
-  serial.begin(9600);
 	MultidropMaster master(&serial);
 
-  uint8_t iteration = 1, i = 0;
+  serial.begin(9600);
   master.setNodeLength(NODE_COUNT);
+  
   while(1) {
-
     master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, true);
 
     // Send alternating 1s and 0s
