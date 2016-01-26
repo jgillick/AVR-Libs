@@ -64,7 +64,7 @@ void MultidropSlave::startMessage() {
 
 uint8_t MultidropSlave::read() {
   // Move onto the next message
-  if (hasNewMessage()) {
+  if (parseState == MESSAGE_READY) {
     parseState = NO_MESSAGE;
   }
 
@@ -106,6 +106,7 @@ uint8_t MultidropSlave::parse(uint8_t b) {
       return 1;
     } 
   }
+  // Second start byte
   else if (parseState == START_SECTION) {
     if (b == SOM) {
       startMessage();
@@ -117,6 +118,7 @@ uint8_t MultidropSlave::parse(uint8_t b) {
       parseState = NO_MESSAGE;
     }
   }
+  // First start byte
   else if (parseState == NO_MESSAGE && b == SOM) {
     parsePos = SOM1_POS;
     parseState = START_SECTION;
@@ -193,11 +195,12 @@ void MultidropSlave::processData(uint8_t b) {
     dataBuffer[dataIndex++] = b;
     dataBuffer[dataIndex] = '\0';
   }
+  fullDataIndex++;
+
   // Done with data
-  else if (fullDataIndex >= fullDataLength) {
+  if (fullDataIndex >= fullDataLength) {
     parseState = END_SECTION;
   }
-  fullDataIndex++;
 }
 
 void MultidropSlave::sendResponse() {
@@ -206,6 +209,7 @@ void MultidropSlave::sendResponse() {
     responseHandler(command, dataBuffer, length);
     for (i = 0; i < length; i++) {
       serial->write(dataBuffer[i]);
+      messageCRC = _crc16_update(messageCRC, dataBuffer[i]);
       fullDataIndex++;
     }
   }
