@@ -7,6 +7,7 @@
 ////////////////////////////////////////////
 void uartReceive();
 void uartSendNextByte();
+void writeByteToRegister(uint8_t);
 
 ////////////////////////////////////////////
 /// Macros
@@ -17,6 +18,8 @@ void uartSendNextByte();
 #define UART0_UCSRB UCSR0B
 #define UART0_UCSRC UCSR0C
 #define UART0_UDR   UDR0
+#define UART0_UDRE  UDRE0
+#define UART0_TXC   TXC0
 
 #ifndef UART0_RX_BUFFER_SIZE
 #define UART0_RX_BUFFER_SIZE 150
@@ -36,8 +39,8 @@ void uartSendNextByte();
 #define RX_BUFFER_EMPTY() (rx_buffer_head == rx_buffer_tail)
 #define RX_BUFFER_FULL() (((rx_buffer_head + 1) % UART0_RX_BUFFER_SIZE) == rx_buffer_tail)
 
-#define DISABLE_RX_INT() UART0_UCSRB &= ~(1 << UDRIE0);
-#define ENABLE_RX_INT() UART0_UCSRB |= (1 << UDRIE0)
+#define DISABLE_TX_INT() UART0_UCSRB &= ~(1 << UDRIE0);
+#define ENABLE_TX_INT() UART0_UCSRB |= (1 << UDRIE0)
 
 ////////////////////////////////////////////
 /// Static Globals
@@ -49,6 +52,10 @@ static volatile uint8_t tx_buffer_head;
 static volatile uint8_t tx_buffer_tail;
 static volatile uint8_t rx_buffer_head;
 static volatile uint8_t rx_buffer_tail;
+
+static volatile uint8_t isRS485 = false;
+static volatile uint8_t rs485_de_pin;
+static volatile uint8_t* rs485_de_port;
 
 ////////////////////////////////////////////
 /// Class members
@@ -79,8 +86,8 @@ void MultidropDataUart::write(uint8_t c) {
 
   // If buffer is empty and the register is ready to be written
   // to, send it directly
-  if (TX_BUFFER_EMPTY() && (UART0_UCSRA & (1<<UDRE0))) {
-    UART0_UDR = c;
+  if (TX_BUFFER_EMPTY() && (UART0_UCSRA & (1<<UART0_UDRE))) {
+    writeByteToRegister(c);
     return;
   }
 
@@ -92,7 +99,7 @@ void MultidropDataUart::write(uint8_t c) {
   // Add to buffer and enable interrupt
   tx_buffer[tx_buffer_head] = c;
   tx_buffer_head = TX_NEXT_HEAD_IDX();
-  ENABLE_RX_INT();
+  ENABLE_TX_INT();
 }
 
 // Read a byte from the RX buffer
@@ -120,12 +127,12 @@ void MultidropDataUart::clear() {
 
 // Send everything in the TX buffer with blocking
 void MultidropDataUart::flush() {
+  DISABLE_TX_INT();
   while (!TX_BUFFER_EMPTY()) {
     uartSendNextByte();
   }
-
-  // Disable interrupt until another byte is written
-  DISABLE_RX_INT();
+  // Wait for the transmit to complete
+  while (!(UART0_UCSRA & (1 << UART0_TXC)));
 }
 
 ////////////////////////////////////////////
@@ -146,18 +153,26 @@ void uartReceive() {
 // Send the next byte off the TX buffer
 void uartSendNextByte() {
   if (TX_BUFFER_EMPTY()) return;
+  DISABLE_TX_INT();
 
   // Wait for TX to be ready
-  while(!(UART0_UCSRA & (1<<UDRE0)));
+  while(!(UART0_UCSRA & (1<<UART0_UDRE)));
 
   // Send from tail and move tail forward
-  UART0_UDR = tx_buffer[tx_buffer_tail];
+  writeByteToRegister(tx_buffer[tx_buffer_tail]);
   tx_buffer_tail = (tx_buffer_tail + 1) % UART0_TX_BUFFER_SIZE;
 
-  // If buffer is empty, disable interrupt
-  if (TX_BUFFER_EMPTY()) {
-    DISABLE_RX_INT();
+  // If buffer isn't empty, enable interrupt
+  if (!TX_BUFFER_EMPTY()) {
+    ENABLE_TX_INT();
   }
+}
+
+// Write a single byte to the TX register
+// this assumes you've made sure the register is empty
+void writeByteToRegister(uint8_t b) {
+  UART0_UDR = b;
+  UART0_UCSRA |= (1 << UART0_TXC); // Reset transmit byte
 }
 
 // Received a byte from the RX line
