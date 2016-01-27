@@ -7,9 +7,16 @@
 
 class MultidropData485 : public MultidropDataUart {
 public:
-  MultidropData485();
-  
-  void write(uint8_t);
+  MultidropData485(volatile uint8_t de_pin_num,
+                   volatile uint8_t* de_ddr_register, 
+                   volatile uint8_t* de_port_register);
+
+  void write(uint8_t byte);
+
+private:
+  volatile uint8_t de_pin;
+  volatile uint8_t* de_ddr; 
+  volatile uint8_t* de_port;
 };
 
 #endif
