@@ -19,12 +19,6 @@ public:
 
   Multidrop(MultidropData*);
 
-  // Return the body of the message
-  uint8_t* getBody();
-
-  // Return the length of the message body
-  int getBodyLen();
-
 protected:
 
   enum Masks {
@@ -35,12 +29,6 @@ protected:
   MultidropData *serial;
 
   uint16_t messageCRC;
-
-  // Put the bus transceiver in TX mode
-  void sendMode();
-
-  // Put the bus transceiver in RX mode
-  void receiveMode();
 };
 
 #endif

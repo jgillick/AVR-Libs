@@ -4,10 +4,4 @@
 Multidrop::Multidrop(MultidropData *_serial) : serial(_serial) {
 }
 
-void Multidrop::sendMode() {
-
-}
-
-void Multidrop::receiveMode(){
-}
 
