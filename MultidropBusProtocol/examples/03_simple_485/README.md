@@ -7,8 +7,10 @@ RS485 bus through a common 485 transceiver, like the Maxim MAX487E.
 
  * Start with 2 AVRs connected to the same ground line.
  * Program one of them with the `master_node` program and the other with `slave_node`.
- * Wire a RS485 transceiver to each AVR (`DI` -> `TX`, `RO` -> `RX`).
- * Connect the `DE` and `RE` pins from each transceiver to the PB1 pin of it's AVR.
+ * Wire a RS485 transceiver to each AVR
+   * `DI` -> `TX`
+   * `RO` -> `RX`
+   * `DE` / `RE` -> `PD2`
  * Connected both transceiver together by their A/B pins (`A` -> `A`, `B` -> `B`).
  * On the slave AVR, connect an LED from `PD2` to ground (with a current limiting resistor).
 
