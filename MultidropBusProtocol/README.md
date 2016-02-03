@@ -6,7 +6,7 @@ In this protocol, master facilitates all message and responses on the bus.
 ## Implemenation Quickstart 
 
 This is the most basic master/server setup where the slave node address is known and master 
-just sends messages. (see the [simple example](/MultidropBusProtocol/examples/simple))
+just sends messages. (see the [simple example](/MultidropBusProtocol/examples/01_simple))
 
 ### Slave
 

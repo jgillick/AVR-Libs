@@ -3,8 +3,8 @@
 This example demonstrates automatic addressing on the bus with the daisy 
 chain line.
 
-This builds on the [slave_response](examples/slave_response) and 
-[simple_485](examples/simple_485) examples.
+This builds on the [slave_response](/MultidropBusProtocol/examples/02_slave_response) and 
+[simple_485](/MultidropBusProtocol/examples/03_simple_485) examples.
 
 Master will have 2 LEDs and a bus with 2 or more slaves, each with a button. 
 When it turns on it will automatically address the nodes on the bus and then
