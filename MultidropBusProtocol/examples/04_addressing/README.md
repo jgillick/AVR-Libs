@@ -17,7 +17,7 @@ light an LED for each slave that has a button pressed.
  * Wire a RS485 transceiver to each AVR
    * `DI` -> `TX`
    * `RO` -> `RX`
-   * `DE` and `RE` -> `PB1`
+   * `DE` / `RE` -> `PB1`
  * Master AVR: Connect an LEDs from `PB0', `PB1` and `PB2` to ground (with current limiting resistors).
  * Slave AVRs: Connect a button from `PB1` to `VCC`.
 
