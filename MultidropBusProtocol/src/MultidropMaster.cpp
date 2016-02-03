@@ -6,9 +6,6 @@
 #define BATCH_FLAG            0b00000001
 #define RESPONSE_MESSAGE_FLAG 0b00000010
 
-#define CMD_RESET   0xAF
-#define CMD_ADDRESS 0xBF
-
 MultidropMaster::MultidropMaster(MultidropData *serial) : Multidrop(serial) {
   state = EOM;
   nodeNum = 0;

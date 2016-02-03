@@ -10,6 +10,9 @@
 #include <stdint.h>
 #include "MultidropData.h"
 
+#define CMD_RESET   0xAF
+#define CMD_ADDRESS 0xBF
+
 class Multidrop {
 
 public:
@@ -67,8 +70,8 @@ protected:
   volatile uint8_t* d2_port;
   volatile uint8_t* d2_pin;
 
-  uint8_t daisy_prev;
-  uint8_t daisy_next;
+  uint8_t daisy_prev,
+          daisy_next;
 
   // Try to determine the next/prev daisy chain pins
   void checkDaisyChainPolarity();

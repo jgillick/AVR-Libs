@@ -20,6 +20,9 @@ class MultidropSlave: public Multidrop {
 public:
   MultidropSlave(MultidropData *_serial);
 
+  // Reset the node
+  void reset();
+
   // Set our address on the network
   // Without setting this, the only messages we'll receive are broadcasts
   void setAddress(uint8_t);
@@ -93,7 +96,9 @@ private:
           length,
           numNodes,
           myAddress,
-          dataIndex;
+          dataIndex,
+          lastAddrReceived,
+          lastAddrConfirmed;
 
   // Batch mode values
   uint16_t fullDataLength,  // Length of the entire data section for all nodes
@@ -113,6 +118,12 @@ private:
 
   // Process the data section of the message
   void processData(uint8_t);
+
+  // Process the addressing response part of the addressing message
+  void processAddressing(uint8_t);
+
+  // Finish the addressing message
+  void doneAddressing();
 
   // Send a response to a message
   void sendResponse();
