@@ -85,6 +85,7 @@ private:
     DATA_POS,
     EOM1_POS,
     EOM2_POS,
+    ADDR_SENT
   };
 
   enum msg_state_t  parseState;
