@@ -10,8 +10,8 @@
 #include <stdint.h>
 #include "MultidropData.h"
 
-#define CMD_RESET   0xAF
-#define CMD_ADDRESS 0xBF
+#define CMD_RESET   0xFA
+#define CMD_ADDRESS 0xFB
 
 class Multidrop {
 

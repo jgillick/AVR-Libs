@@ -18,8 +18,8 @@ void responseHandler(uint8_t command, uint8_t *buff,uint8_t len);
 int main() {
   uint8_t ledOn = 0;
 
-  // Button on PB1
-  DDRB &= ~(1 << PB1);
+  // Button on PB3
+  DDRB &= ~(1 << PB3);
   
   // Setup serial
   MultidropDataUart serial;
@@ -37,6 +37,6 @@ int main() {
 }
 
 void responseHandler(uint8_t command, uint8_t *buff, uint8_t len) {
-  buff[0] = !!(PINB & (1<<PB1));
+  buff[0] = !!(PINB & (1<<PB3));
 }
 

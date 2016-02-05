@@ -16,13 +16,13 @@
 
 #define NODE_COUNT 1
 
-uint16_t current_time = 0;
+volatile uint32_t current_time = 0;
 
 void startClock();
-uint16_t getTime();
+uint32_t getTime();
 
 int main() {
-  uint16_t t;
+  uint32_t t;
   uint8_t response_buff[NODE_COUNT];
   uint8_t default_response[1] = {0};
 
@@ -50,9 +50,6 @@ int main() {
     // Wait for response
     while(t = getTime() && !master.checkForResponses(t));
 
-    // We still need to close the message
-    master.finishMessage();
-
     // Light the LED if the first node's button is pressed
     if (response_buff[0] == 1) {
       PORTB |= (1 << PB0);
@@ -63,7 +60,7 @@ int main() {
 }
 
 // Get current time, in milliseconds
-uint16_t getTime() {
+uint32_t getTime() {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     return current_time;
   }

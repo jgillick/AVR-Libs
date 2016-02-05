@@ -15,7 +15,7 @@ that will provide this value at runtime.
  * Connect `TX` from the master AVR to the `RX` of the slave AVR.
  * Connect `RX` from the master AVR to the `TX` of the slave AVR.
  * Master AVR: Connect an LED from `PB0' to ground (with a current limiting resistor).
- * Slave AVR: Connect a button from `PB1` to positive.
+ * Slave AVR: Connect a button from `PB3` to positive.
 
 Now add power to both AVRs, when you press the button on the slave node, the LED connected
 to master should turn on.

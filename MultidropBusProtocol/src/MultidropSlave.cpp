@@ -62,7 +62,6 @@ void MultidropSlave::startMessage() {
   fullDataIndex = 0;
   dataStartOffset = 0;
   lastAddrReceived = 0;
-  lastAddrConfirmed = 0;
 
   messageCRC = ~0;
   messageCRC = _crc16_update(messageCRC, SOM);
@@ -199,7 +198,8 @@ void MultidropSlave::processData(uint8_t b) {
   // Addressing requires special handling
   if (command == CMD_ADDRESS) {
     processAddressing(b);
-  }
+    return;
+  } 
 
   // Provide a response to fill our data section
   if (isResponseMessage() && fullDataIndex == dataStartOffset) {
@@ -223,35 +223,21 @@ void MultidropSlave::processData(uint8_t b) {
 
 void MultidropSlave::processAddressing(uint8_t b) {
 
-  // Address confirmation
-  if (b == lastAddrReceived) {
-    lastAddrConfirmed = b;
+  if (!myAddress && getPrevDaisyChainValue() && b >= lastAddrReceived && !serial->available()) {
+    myAddress = b + 1;
+    setNextDaisyValue(1);
+    serial->write(myAddress);
 
-    // If daisy chain is HIGH, set address
-    if (!myAddress && getPrevDaisyChainValue()) {
-      myAddress = b + 1;
-
-      // Write our address and drive the next daisy line high
-      serial->write(myAddress);
-      setNextDaisyValue(1);
-      serial->write(myAddress);
-
-      // Max address is 0xFF
-      if (myAddress == 0xFF) {
-        doneAddressing();
-      }
-    }
-
-    // Done when we see two 0x00 or 0xFF
-    else if ((myAddress && lastAddrConfirmed == 0x00) || lastAddrConfirmed == 0xFF) {
+    // Max address is 0xFF
+    if (myAddress == 0xFF) {
       doneAddressing();
     }
   }
-
-  // Next address
-  else if (b + 1 == lastAddrConfirmed || b == 0x00 || b == 0xFF) {
-    lastAddrReceived = b;
+  // Done when we see two 0x00 or 0xFF
+  else if (lastAddrReceived == b && (lastAddrReceived == 0x00 || lastAddrReceived == 0xFF)) {
+    doneAddressing();
   }
+  lastAddrReceived = b;
 }
 
 void MultidropSlave::doneAddressing() {

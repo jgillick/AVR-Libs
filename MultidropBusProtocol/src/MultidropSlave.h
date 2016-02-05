@@ -84,7 +84,7 @@ private:
     HEADER_LEN2_POS,
     DATA_POS,
     EOM1_POS,
-    EOM2_POS
+    EOM2_POS,
   };
 
   enum msg_state_t  parseState;
@@ -97,8 +97,7 @@ private:
           numNodes,
           myAddress,
           dataIndex,
-          lastAddrReceived,
-          lastAddrConfirmed;
+          lastAddrReceived;
 
   // Batch mode values
   uint16_t fullDataLength,  // Length of the entire data section for all nodes

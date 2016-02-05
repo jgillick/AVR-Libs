@@ -15,7 +15,7 @@ void MultidropMaster::setNodeLength(uint8_t num) {
   nodeNum = num;
 }
 
-void MultidropMaster::addDaisyChain(volatile uint8_t next_pin_num,
+void MultidropMaster::addNextDaisyChain(volatile uint8_t next_pin_num,
                                     volatile uint8_t* next_ddr_register, 
                                     volatile uint8_t* next_port_register, 
                                     volatile uint8_t* next_pin_register) {
@@ -68,24 +68,25 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
   return 1;
 }
 
-void MultidropMaster::startAddressing() {
+void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
+  nodeNum = 0;
   lastAddressReceived = 0x00;
   nodeAddressTimeouts = 0;
+  timeoutDuration = timeout;
+  timeoutTime = t + timeoutDuration;
 
   // Send reset message
   startMessage(CMD_RESET, BROADCAST_ADDRESS);
   finishMessage();
 
   // Start address message
-  nodeNum = 0;
   startMessage(CMD_ADDRESS, BROADCAST_ADDRESS, 2, true, true);
   state = ADDRESSING;
   setNextDaisyValue(1);
   sendByte(0x00);
-  sendByte(0x00);
 }
 
-void MultidropMaster::setResponseSettings(uint8_t *buff, uint16_t time, uint16_t timeout, uint8_t *defaultResponse) {
+void MultidropMaster::setResponseSettings(uint8_t *buff, uint32_t time, uint32_t timeout, uint8_t *defaultResponse) {
   responseIndex = 0;
   responseBuff = buff;
   timeoutDuration = timeout;
@@ -101,7 +102,7 @@ void MultidropMaster::setResponseSettings(uint8_t *buff, uint16_t time, uint16_t
   checkForResponses(time);
 }
 
-uint8_t MultidropMaster::checkForResponses(uint16_t time) {
+uint8_t MultidropMaster::checkForResponses(uint32_t time) {
   uint8_t b, i;
 
   // Received all responses
@@ -138,13 +139,17 @@ uint8_t MultidropMaster::checkForResponses(uint16_t time) {
     waitingOnNodes--;
   }
 
-  return (waitingOnNodes == 0);
+  if (waitingOnNodes == 0) {
+    finishMessage();
+    return true;
+  }
+  return false;
 }
 
-MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint16_t time) {
+MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
   uint8_t b;
   
-  if (state != ADDRESSING) return ADR_DONE;
+  if (state != ADDRESSING) return ADR_DONE; 
 
   // If master's prev daisy chain is HIGH, then the network has gone full circle
   if (getPrevDaisyChainValue() == 1) {
@@ -155,14 +160,15 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint16_t time) {
   // Receive next address
   while (serial->available()) {
     b = serial->read();
+    timeoutTime = (time + timeoutDuration);
 
-    // Verify the expected address
+    // Verify it's 1 larger than the last address
     if (b == lastAddressReceived + 1) { 
       lastAddressReceived = b;
       nodeNum++;
-      timeoutTime = time + timeoutDuration;
     }
-    else {
+    // Corrupt, finish the message in error
+    else { 
       finishMessage();
       return ADR_ERROR;
     }
@@ -171,15 +177,19 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint16_t time) {
   // Node timeout, try again or finish
   if (time > timeoutTime) {
     nodeAddressTimeouts++;
-
-    if (nodeAddressTimeouts >= MD_MASTER_ADDR_MAX_TIMEOUTS) {
-      finishMessage();
-      return ADR_DONE;
-    } 
-    else {
+    if (nodeAddressTimeouts <= MD_MASTER_ADDR_MAX_TIMEOUTS) {
       sendByte(lastAddressReceived);
-      timeoutTime = time + timeoutDuration;
+      serial->flush();
+      timeoutTime = (time + timeoutDuration);
     }
+    else {
+      finishMessage();
+      if (nodeNum > 0) {
+        return ADR_DONE;
+      } else {
+        return ADR_ERROR;
+      }
+    } 
   }
 
   // Max nodes

@@ -13,56 +13,101 @@
 #include <util/delay.h>
 
 #include "MultidropMaster.h"
-#include "MultidropDataUart.h"
+#include "MultidropData485.h"
 
-uint16_t current_time = 0;
 
 void startClock();
-uint16_t getTime();
+uint32_t getTime();
+void addressNodes();
+void updateLEDs();
+
+uint8_t response_buff[254];
+volatile uint32_t current_time;
+
+MultidropData485 serial(PD2, &DDRD, &PORTD);
+MultidropMaster master(&serial);
 
 int main() {
-  uint16_t t;
-  uint8_t response_buff[NODE_COUNT];
+  uint32_t t;
   uint8_t default_response[1] = {0};
 
-  // LED on PB0
-  DDRB |= (1 << PB0);
-  PORTB &= ~(1 << PB0);
-
-  // Setup serial connection
-  MultidropDataUart serial;
+  // Setup serial and clock
   serial.begin(9600);
-
-  // Setup master node
-	MultidropMaster master(&serial);
-  master.setNodeLength(NODE_COUNT);
-
   startClock();
+
+  // Init LEDs
+  DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
+  PORTB &= ~(1 << PB0) & ~(1 << PB1) & ~(1 << PB2);
+
+  // Set daisy chain
+  master.addDaisyChain(PD5, &DDRD, &PORTD, &PIND,
+                       PD6, &DDRD, &PORTD, &PIND);
+  master.setDaisyChainPolarity(1, 2);
+  
+  // Addressing
+  addressNodes();
+
+  // How handle responding to button presses
   while(1) {
 
     // Start message asking for button values
     master.startMessage(0x02, MultidropMaster::BROADCAST_ADDRESS, 1, true, true);
-
-    // Timeout in 1ms, default response is 0
     master.setResponseSettings(response_buff, getTime(), 1, default_response);
 
     // Wait for response
-    while(t = getTime() && !master.checkForResponses(t));
+    while(1) {
+      t = getTime();
+      if (master.checkForResponses(t)) {
+        break;
+      }
+    }
 
-    // We still need to close the message
+    // Close the message
     master.finishMessage();
 
-    // Light the LED if the first node's button is pressed
-    if (response_buff[0] == 1) {
-      PORTB |= (1 << PB0);
-    } else {
-      PORTB &= ~(1 << PB0);
+    // Light the LEDs
+    updateLEDs();
+  }
+}
+
+void addressNodes() {
+  uint32_t t = getTime();
+  MultidropMaster::adr_state_t response;
+
+  master.startAddressing(t, 10);
+
+  // Wait for all nodes to finish being addressed
+  while(1) {
+    response = master.checkForAddresses(t++);
+    if (response != MultidropMaster::ADR_WAITING) {
+      break;
     }
+  }
+
+  // Finished successfully
+  if (response == MultidropMaster::ADR_DONE) {
+    PORTB |= (1 << PB0);
+  }
+  // Error, try again in a few ms
+  else if (response == MultidropMaster::ADR_ERROR) {
+    _delay_ms(3);
+    addressNodes();
+  }
+}
+
+void updateLEDs() {
+  PORTB &= ~(1 << PB1) & ~(1 << PB2);
+
+  if (response_buff[0] == 1) {
+    PORTB |= (1 << PB1);
+  }
+  if (response_buff[1] == 1) {
+    PORTB |= (1 << PB1);
   }
 }
 
 // Get current time, in milliseconds
-uint16_t getTime() {
+uint32_t getTime() {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     return current_time;
   }
@@ -82,5 +127,5 @@ void startClock() {
 
 // Interrupt to keep time
 ISR(TIMER0_COMPA_vect) {
-  current_time++;
+  current_time += 1;
 }

@@ -197,25 +197,23 @@ This wire is connected from the master to the first node, then outgoing from the
 to the second and so on. Each node controls the outgoing portion of the daisy chain line.
 
 To address all nodes, master will first send out a global `reset` command that
-tells all nodes to forger their address. Then master will start a batch addressing message
-with no body or CRC:
+tells all nodes to forger their address. Then master starts a batch response message:
 
 `0xFF 0xFF 0x00 <Address Command>`
 
-Then it will raise the first daisy chain line to `high` and send `0x00` twice
-(the second time is an easy way to determine non-corrupt data):
+It then sets the daisy chain line to the first node to `high` and sends `0x00` to the bus:
 
-`0x00 0x00`
+`0x00`
 
 The first node will see it's incoming daisy line is `high` and increment the received
 address by 1, to `0x01` and assigns it to itself. Then it raises it's outgoing daisy
-line to `high` and sends it's address twice:
+line to `high` and sends it's address to the bus:
 
-`0x01 0x01`
+`0x01`
 
 This continues for all nodes on the bus. There are two important timeouts used here.
 When the bus goes quiet, master will first repeat the last address to the bus (in
-case the last address posted became corrupt or the next node did not hear it). If
+case the last address posted became corrupt or the next node did not see it). If
 the bus continues to be quiet, master will assume that all nodes have been addressed
 and it closes the address command by repeating `0x00` twice:
 

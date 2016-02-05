@@ -66,6 +66,7 @@ uint8_t Multidrop::getDaisyChainNext() {
 }
 
 void Multidrop::setDaisyChainPolarity(uint8_t next, uint8_t prev) {
+  checkDaisyChainPolarity();
   if (prev == 0 || prev > 2 || next == 0 || next > 2) return;
 
   daisy_prev = prev;
@@ -73,6 +74,7 @@ void Multidrop::setDaisyChainPolarity(uint8_t next, uint8_t prev) {
 }
 
 void Multidrop::setNextDaisyValue(uint8_t val) {
+  checkDaisyChainPolarity();
   if (!daisy_next) return;
 
   uint8_t mask = (daisy_next == 2) ? (1 << d2_num) : (1 << d1_num);
@@ -87,6 +89,7 @@ void Multidrop::setNextDaisyValue(uint8_t val) {
 }
 
 uint8_t Multidrop::getPrevDaisyChainValue() {
+  checkDaisyChainPolarity();
   if (!daisy_prev) return 0;
 
   uint8_t mask = (daisy_prev == 2) ? (1 << d2_num) : (1 << d1_num);

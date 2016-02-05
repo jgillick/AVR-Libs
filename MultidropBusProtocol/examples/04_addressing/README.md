@@ -19,7 +19,12 @@ light an LED for each slave that has a button pressed.
    * `RO` -> `RX`
    * `DE` / `RE` -> `PD2`
  * Master AVR: Connect an LEDs from `PB0', `PB1` and `PB2` to ground (with current limiting resistors).
- * Slave AVRs: Connect a button from `PB1` to `VCC`.
+ * Slave AVRs: Connect a button from `PB3` to `VCC`.'
+ * Daisy chain:
+   * Connect `PD5` from master to `PD6` on the first slave node.
+   * Connect `PD5` from the first slave node to `PD6` on the next.
+   * Continue for all slave nodes
+   * Connect `PD5` from the last slave node to `PD6` on the master node.
 
-When you power up the circuit, master will address all nodes and then light the LED on `PB1`, indicating
+When you power up the circuit, master will address all nodes and then light the LED on `PB0`, indicating
 that it's ready for input. When you press a slave's button, one of the LEDs will light.

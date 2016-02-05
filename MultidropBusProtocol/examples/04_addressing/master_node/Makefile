@@ -63,7 +63,7 @@ OBJECTS=$(SOURCES:.cpp=.o)
 HEADERS=$(SOURCES:.cpp=.h)
 
 ## Compilation options, type man avr-gcc if you're curious.
-CPPFLAGS = -DF_CPU=$(F_CPU) -I. -I$(LIBDIR) -O
+CPPFLAGS = -DF_CPU=$(F_CPU) -I. -I$(LIBDIR) -Os
 CFLAGS = -Os -g -std=gnu99 -Wall
 ## Use short (8-bit) data types
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
