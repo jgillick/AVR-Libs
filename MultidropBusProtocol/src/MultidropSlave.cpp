@@ -222,19 +222,37 @@ void MultidropSlave::processData(uint8_t b) {
 
 
 void MultidropSlave::processAddressing(uint8_t b) {
+  
+  // We still waiting for an address
+  if (myAddress == 0 && getPrevDaisyChainValue() == 1){
+    
+    // Address confirmation
+    if (parsePos == ADDR_SENT && b == lastAddrReceived) {
+      parsePos = ADDR_CONFIRMED;
+      myAddress = b;
+      setNextDaisyValue(1);
 
-  if (!myAddress && getPrevDaisyChainValue() && b >= lastAddrReceived && !serial->available()) {
-    myAddress = b + 1;
-    setNextDaisyValue(1);
-    serial->write(myAddress);
-
-    // Max address is 0xFF
-    if (myAddress == 0xFF) {
-      doneAddressing();
+      // Max address is 0xFF
+      if (b == 0xFF) {
+        doneAddressing();
+      }
+      return;
+    }
+    // Not confirmed, try again
+    else {
+      parsePos = 0;
+      lastAddrReceived = b;
+    }
+    
+    // This might be ours, send tentative new address and wait for confirmation
+    if(b >= lastAddrReceived && !serial->available()) {
+      b++;
+      serial->write(b);
+      parsePos = ADDR_SENT;
     }
   }
   // Done when we see two 0x00 or 0xFF
-  else if (lastAddrReceived == b && (lastAddrReceived == 0x00 || lastAddrReceived == 0xFF)) {
+  if (parsePos != ADDR_SENT && lastAddrReceived == b && (lastAddrReceived == 0x00 || lastAddrReceived == 0xFF)) {
     doneAddressing();
   }
   lastAddrReceived = b;
