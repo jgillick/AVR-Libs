@@ -73,7 +73,13 @@ uint8_t MultidropSlave::read() {
   if (parseState == MESSAGE_READY) {
     parseState = NO_MESSAGE;
   }
-
+  
+  // We're addressing and our prev daisy line went high after the last address was received
+  if (command == CMD_ADDRESS && !myAddress && getPrevDaisyChainValue() && parsePos != ADDR_SENT && !serial->available()){
+    processAddressing(lastAddrReceived);
+  }
+  
+  // Handle incoming bytes
   while (serial->available()) {
     if(parse(serial->read()) == 1 && !isResponseMessage()) {
 
