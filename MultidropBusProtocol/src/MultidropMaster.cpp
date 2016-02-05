@@ -71,7 +71,7 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
 void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   nodeNum = 0;
   lastAddressReceived = 0x00;
-  nodeAddressTimeouts = 0;
+  nodeAddressTries = 0;
   timeoutDuration = timeout;
   timeoutTime = t + timeoutDuration;
 
@@ -162,22 +162,31 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
     b = serial->read();
     timeoutTime = (time + timeoutDuration);
 
-    // Verify it's 1 larger than the last address
+    // Verify it's 1 larger than the last address and send confirmation
     if (b == lastAddressReceived + 1) { 
-      lastAddressReceived = b;
       nodeNum++;
+      lastAddressReceived = b;
+      nodeAddressTries = 0;
+      sendByte(b);
     }
-    // Corrupt, finish the message in error
+    // Invalid address
     else { 
-      finishMessage();
-      return ADR_ERROR;
+      // Max tries, end in error
+      nodeAddressTries++;
+      if (nodeAddressTries > MD_MASTER_ADDR_MAX_TRIES) {
+        return ADR_ERROR;
+      }
+      // Send last valid address again
+      else {
+        sendByte(lastAddressReceived);
+      }
     }
   }
 
   // Node timeout, try again or finish
   if (time > timeoutTime) {
-    nodeAddressTimeouts++;
-    if (nodeAddressTimeouts <= MD_MASTER_ADDR_MAX_TIMEOUTS) {
+    nodeAddressTries++;
+    if (nodeAddressTries <= MD_MASTER_ADDR_MAX_TRIES) {
       sendByte(lastAddressReceived);
       serial->flush();
       timeoutTime = (time + timeoutDuration);
@@ -193,7 +202,7 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
   }
 
   // Max nodes
-  if (nodeNum >= 254) {
+  if (lastAddressReceived == 255) {
     finishMessage();
     return ADR_DONE;
   }
