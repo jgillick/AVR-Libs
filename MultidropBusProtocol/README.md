@@ -109,6 +109,17 @@ message applies to all nodes. Master does not have an address, as it coordinates
 
 A byte that represents what this message is for.
 
+#### Reserved commands:
+
+These commnads are reserved and used by the system.
+
+ * `0xFA` - Reset node's address and daisy lines.
+ * `0xFB` - Automatic addressing (see section below).
+ * `0xFC` - Reserved, but unused.
+ * `0xFD` - Reserved, but unused
+ * `0xFE` - Reserved, but unused
+ * `0xFF` - Reserved, but unused
+
 ## Length
 
 In a standard message, this is the number of bytes in the data section of the message.
@@ -187,7 +198,7 @@ in it's place to unblock the nodes after it.
 Length will match normal batch messages, the first length byte will be the number of nodes on the 
 bus and the second byte will be the data length per node expected in each response.
 
-## Addressing
+## Automatic Addressing
 
 You can set a node's address manually (via `setAddress()`) or you can use the library's
 automatic addressing scheme.
@@ -206,18 +217,59 @@ It then sets the daisy chain line to the first node to `high` and sends `0x00` t
 `0x00`
 
 The first node will see it's incoming daisy line is `high` and increment the received
-address by 1, to `0x01` and assigns it to itself. Then it raises it's outgoing daisy
-line to `high` and sends it's address to the bus:
+address by 1, to `0x01`, sends that to the bus and waits for confirmation:
 
 `0x01`
 
+Master receives this address and confirms by sending that address back to the bus
+(if the node sends an invalid address, master will resend the last valid address instead):
+
+`0x01`
+
+The first node receives the confirmation, assigns the to itself and raises it's outgoing daisy
+line to `high` so the next node can address itself.
+
 This continues for all nodes on the bus. There are two important timeouts used here.
-When the bus goes quiet, master will first repeat the last address to the bus (in
+When the bus goes quiet, master will repeat the last address to the bus (in
 case the last address posted became corrupt or the next node did not see it). If
 the bus continues to be quiet, master will assume that all nodes have been addressed
 and it closes the address command by repeating `0x00` twice:
 
 `0x00 0x00`
+
+In summary, the addressing looks like this for two slave nodes:
+
+```
+master -> 0xFF 0xFF 0x00 <Address Command>
+master -> {next daisy pin high}
+master -> 0x00
+node1  -> 0x01
+master -> 0x01
+node1  -> {next daisy pin high}
+node2  -> 0x02
+master -> 0x02
+node2  -> {next daisy pin high}
+master -> 0x00 0x00
+```
+
+If node2 initially sent the wrong address, it would look like this:
+
+```
+master -> 0xFF 0xFF 0x00 <Address Command>
+master -> {next daisy pin high}
+master -> 0x00
+node1  -> 0x01
+master -> 0x01
+node1  -> {next daisy pin high}
+node2  -> 0x05 (invalid address, not 1 greater than the previous)
+master -> 0x02 (master correcting node)
+node2  -> 0x02 (node responding with correct address)
+master -> 0x02 (master confirming correct address)
+node2  -> {next daisy pin high}
+master -> 0x00 0x00
+```
+
+If master is never able to correct a node sending the wrong address, master closes the addressing message (`0x00 0x00`) and the entire addressing operation ends in error status.
 
 ### Another ending option
 The last node could also connect it's outgoing daisy line back to master, so that it
