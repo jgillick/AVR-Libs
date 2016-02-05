@@ -8,8 +8,8 @@
 #include "Multidrop.h"
 
 // How many times master will try to get a node's address, before deciding it is done
-#ifndef MD_MASTER_ADDR_MAX_TIMEOUTS
-#define MD_MASTER_ADDR_MAX_TIMEOUTS 3
+#ifndef MD_MASTER_ADDR_MAX_TRIES
+#define MD_MASTER_ADDR_MAX_TRIES 4
 #endif
 
 class MultidropMaster: public Multidrop {
@@ -93,7 +93,7 @@ private:
            dataLength,
            state,
            waitingOnNodes,
-           nodeAddressTimeouts,
+           nodeAddressTries,
            lastAddressReceived;
 
   uint8_t *responseBuff,
