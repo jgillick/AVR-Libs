@@ -85,7 +85,10 @@ private:
     DATA_POS,
     EOM1_POS,
     EOM2_POS,
-    ADDR_SENT
+    ADDR_UNSET,
+    ADDR_SENT,
+    ADDR_CONFIRMED,
+    ADDR_UNCONFIRMED
   };
 
   enum msg_state_t  parseState;
@@ -98,7 +101,7 @@ private:
           numNodes,
           myAddress,
           dataIndex,
-          lastAddrReceived;
+          lastAddr;
 
   // Batch mode values
   uint16_t fullDataLength,  // Length of the entire data section for all nodes

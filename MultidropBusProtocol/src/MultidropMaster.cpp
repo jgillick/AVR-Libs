@@ -70,10 +70,10 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
 
 void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   nodeNum = 0;
-  lastAddressReceived = 0x00;
+  lastAddressReceived = 0;
   nodeAddressTries = 0;
-  timeoutDuration = timeout;
-  timeoutTime = t + timeoutDuration;
+  addrTimeoutDuration = timeout;
+  timeoutTime = t + addrTimeoutDuration;
 
   // Send reset message
   startMessage(CMD_RESET, BROADCAST_ADDRESS);
@@ -82,8 +82,10 @@ void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   // Start address message
   startMessage(CMD_ADDRESS, BROADCAST_ADDRESS, 2, true, true);
   state = ADDRESSING;
-  setNextDaisyValue(1);
   sendByte(0x00);
+  setNextDaisyValue(1);
+
+  dontTimeout = true;
 }
 
 void MultidropMaster::setResponseSettings(uint8_t *buff, uint32_t time, uint32_t timeout, uint8_t *defaultResponse) {
@@ -93,13 +95,11 @@ void MultidropMaster::setResponseSettings(uint8_t *buff, uint32_t time, uint32_t
   defaultResponseValues = defaultResponse;
   timeoutTime = time + timeoutDuration;
 
-  if (destAddress != BROADCAST_ADDRESS) {
+  if (destAddress == BROADCAST_ADDRESS) {
     waitingOnNodes = nodeNum;
   } else {
     waitingOnNodes = 1;
   }
-
-  checkForResponses(time);
 }
 
 uint8_t MultidropMaster::checkForResponses(uint32_t time) {
@@ -107,7 +107,8 @@ uint8_t MultidropMaster::checkForResponses(uint32_t time) {
 
   // Received all responses
   if (waitingOnNodes == 0) {
-    return 1;
+    finishMessage();
+    return true;
   }
 
   // Get more responses
@@ -148,19 +149,26 @@ uint8_t MultidropMaster::checkForResponses(uint32_t time) {
 
 MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
   uint8_t b;
+
+  if (dontTimeout) {
+    timeoutTime = time + addrTimeoutDuration;
+  }
+  dontTimeout = false;
   
   if (state != ADDRESSING) return ADR_DONE; 
 
   // If master's prev daisy chain is HIGH, then the network has gone full circle
-  if (getPrevDaisyChainValue() == 1) {
+  if (isPrevDaisyHigh() == 1) {
     finishMessage();
     return ADR_DONE;
   }
 
   // Receive next address
-  while (serial->available()) {
-    b = serial->read();
-    timeoutTime = (time + timeoutDuration);
+  if (serial->available()) {
+    dontTimeout = true; // skip timing out next call
+    while (serial->available()) {
+      b = serial->read();
+    }
 
     // Verify it's 1 larger than the last address and send confirmation
     if (b == lastAddressReceived + 1) { 
@@ -178,27 +186,21 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
       }
       // Send last valid address again
       else {
+        sendByte(0x00);
         sendByte(lastAddressReceived);
       }
     }
+    return ADR_WAITING;
   }
 
-  // Node timeout, try again or finish
+  // Node timeout, finish
   if (time > timeoutTime) {
-    nodeAddressTries++;
-    if (nodeAddressTries <= MD_MASTER_ADDR_MAX_TRIES) {
-      sendByte(lastAddressReceived);
-      serial->flush();
-      timeoutTime = (time + timeoutDuration);
+    finishMessage();
+    if (nodeNum > 0) {
+      return ADR_DONE;
+    } else {
+      return ADR_ERROR;
     }
-    else {
-      finishMessage();
-      if (nodeNum > 0) {
-        return ADR_DONE;
-      } else {
-        return ADR_ERROR;
-      }
-    } 
   }
 
   // Max nodes
@@ -237,14 +239,25 @@ void MultidropMaster::sendByte(uint8_t b, uint8_t updateCRC) {
 uint8_t MultidropMaster::finishMessage() {
   if (state == EOM) return 0;
 
+  // Send NULL message to end the addressing stage
   if (state == ADDRESSING) {
-    sendByte(0x00);
-    sendByte(0x00);
+
+    // If the last address is 255, we've already sent 0xFF twice
+    if (lastAddressReceived < 0xFF) {
+      sendByte(0xFF);
+      sendByte(0xFF);
+    }
+
+    // Send null message, just in case
+    sendByte(0x00);     // flags
+    sendByte(0x00);     // broadcast address
+    sendByte(CMD_NULL); // command
+    sendByte(0);        // length
   }
-  else {
-    sendByte((messageCRC >> 8) & 0xFF, false);
-    sendByte(messageCRC & 0xff, false);
-  }
+  
+  // End CRC
+  sendByte((messageCRC >> 8) & 0xFF, false);
+  sendByte(messageCRC & 0xff, false);
 
   state = EOM;
   return 1;

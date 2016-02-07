@@ -56,12 +56,12 @@ void MultidropSlave::startMessage() {
   flags = 0;
   length = 0;
   address = 0;
+  lastAddr = 0xFF;
   dataIndex = 0;
   dataBuffer[0] = '\0';
   fullDataLength = 0;
   fullDataIndex = 0;
   dataStartOffset = 0;
-  lastAddrReceived = 0;
 
   messageCRC = ~0;
   messageCRC = _crc16_update(messageCRC, SOM);
@@ -69,14 +69,16 @@ void MultidropSlave::startMessage() {
 }
 
 uint8_t MultidropSlave::read() {
+  checkDaisyChainPolarity();
+
   // Move onto the next message
   if (parseState == MESSAGE_READY) {
     parseState = NO_MESSAGE;
   }
   
   // We're addressing and our prev daisy line went high after the last address was received
-  if (command == CMD_ADDRESS && !myAddress && getPrevDaisyChainValue() && parsePos != ADDR_SENT && !serial->available()){
-    processAddressing(lastAddrReceived);
+  if (command == CMD_ADDRESS && parsePos == ADDR_UNSET && isPrevDaisyHigh() && !serial->available()){
+    processAddressing(lastAddr);
   }
   
   // Handle incoming bytes
@@ -99,7 +101,11 @@ uint8_t MultidropSlave::parse(uint8_t b) {
     parseHeader(b);
   }
   else if (parseState == DATA_SECTION) {
-    processData(b);
+    if (command == CMD_ADDRESS) {
+      processAddressing(b);
+    } else {
+      processData(b);
+    }
   }
   // Validate CRC
   else if (parseState == END_SECTION) {
@@ -186,6 +192,12 @@ void MultidropSlave::parseHeader(uint8_t b) {
     parseState = DATA_SECTION;
   }
 
+  // On to addressing
+  if (parseState == DATA_SECTION && command == CMD_ADDRESS) {
+    setNextDaisyValue(0);
+    parsePos = ADDR_UNSET;
+  }
+
   // No data, continue to CRC
   if (parseState == DATA_SECTION && length == 0) {
     parseState = END_SECTION;
@@ -200,12 +212,6 @@ void MultidropSlave::parseHeader(uint8_t b) {
 void MultidropSlave::processData(uint8_t b) {
   messageCRC = _crc16_update(messageCRC, b);
   parsePos = DATA_POS;
-
-  // Addressing requires special handling
-  if (command == CMD_ADDRESS) {
-    processAddressing(b);
-    return;
-  } 
 
   // Provide a response to fill our data section
   if (isResponseMessage() && fullDataIndex == dataStartOffset) {
@@ -227,41 +233,46 @@ void MultidropSlave::processData(uint8_t b) {
 }
 
 
-void MultidropSlave::processAddressing(uint8_t b) {
-  
-  // We still waiting for an address
-  if (myAddress == 0 && getPrevDaisyChainValue() == 1){
-    
-    // Address confirmation
-    if (parsePos == ADDR_SENT && b == lastAddrReceived) {
-      parsePos = ADDR_CONFIRMED;
-      myAddress = b;
-      setNextDaisyValue(1);
+void MultidropSlave::processAddressing(uint8_t b) { 
 
-      // Max address is 0xFF
-      if (b == 0xFF) {
-        doneAddressing();
+  // We still waiting for an address
+  if (myAddress == 0 && isPrevDaisyHigh() && !serial->available()){
+
+    // Address confirmation
+    if (parsePos == ADDR_SENT) {
+      if (b == lastAddr) {
+        parsePos = ADDR_CONFIRMED;
+        myAddress = b;
+        setNextDaisyValue(1);
+
+        // Max address is 0xFF
+        if (b == 0xFF) {
+          doneAddressing();
+        }
+        return;
       }
+      // Not confirmed, try again
+      else {
+        parsePos = ADDR_UNSET;
+        lastAddr = b;
+        return;
+      }
+    }
+    // This might be ours, send tentative new address and wait for confirmation
+    else if(b >= lastAddr) {
+      b++;
+      parsePos = ADDR_SENT;
+      serial->write(b);
+      lastAddr = b;
       return;
     }
-    // Not confirmed, try again
-    else {
-      parsePos = 0;
-      lastAddrReceived = b;
-    }
-    
-    // This might be ours, send tentative new address and wait for confirmation
-    if(b >= lastAddrReceived && !serial->available()) {
-      b++;
-      serial->write(b);
-      parsePos = ADDR_SENT;
-    }
   }
-  // Done when we see two 0x00 or 0xFF
-  if (parsePos != ADDR_SENT && lastAddrReceived == b && (lastAddrReceived == 0x00 || lastAddrReceived == 0xFF)) {
+
+  // Done when we see two 0xFF
+  if (parsePos != ADDR_SENT && lastAddr == b && b == 0xFF) {
     doneAddressing();
   }
-  lastAddrReceived = b;
+  lastAddr = b;
 }
 
 void MultidropSlave::doneAddressing() {

@@ -12,6 +12,7 @@
 
 #define CMD_RESET   0xFA
 #define CMD_ADDRESS 0xFB
+#define CMD_NULL    0xFF
 
 class Multidrop {
 
@@ -80,7 +81,7 @@ protected:
   void setNextDaisyValue(uint8_t val);
 
   // Get the value (1 or 0) from the prev daisy chain pin
-  uint8_t getPrevDaisyChainValue();
+  uint8_t isPrevDaisyHigh();
 
 };
 

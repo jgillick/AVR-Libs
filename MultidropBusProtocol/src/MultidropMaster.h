@@ -86,12 +86,14 @@ private:
   };
 
   uint32_t timeoutTime,
-           timeoutDuration;
+           timeoutDuration,
+           addrTimeoutDuration;
   uint16_t responseIndex;
 
   uint8_t  destAddress,
            dataLength,
            state,
+           dontTimeout,
            waitingOnNodes,
            nodeAddressTries,
            lastAddressReceived;

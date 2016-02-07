@@ -118,7 +118,7 @@ These commnads are reserved and used by the system.
  * `0xFC` - Reserved, but unused.
  * `0xFD` - Reserved, but unused
  * `0xFE` - Reserved, but unused
- * `0xFF` - Reserved, but unused
+ * `0xFF` - Null message
 
 ## Length
 
@@ -210,7 +210,7 @@ to the second and so on. Each node controls the outgoing portion of the daisy ch
 To address all nodes, master will first send out a global `reset` command that
 tells all nodes to forger their address. Then master starts a batch response message:
 
-`0xFF 0xFF 0x00 <Address Command>`
+`0xFF 0xFF 0x00 <Address Command> 0x00 0x02`
 
 It then sets the daisy chain line to the first node to `high` and sends `0x00` to the bus:
 
@@ -229,18 +229,15 @@ Master receives this address and confirms by sending that address back to the bu
 The first node receives the confirmation, assigns the to itself and raises it's outgoing daisy
 line to `high` so the next node can address itself.
 
-This continues for all nodes on the bus. There are two important timeouts used here.
-When the bus goes quiet, master will repeat the last address to the bus (in
-case the last address posted became corrupt or the next node did not see it). If
-the bus continues to be quiet, master will assume that all nodes have been addressed
-and it closes the address command by repeating `0x00` twice:
+This continues for all nodes on the bus. If the bus is quiet for too long (timeout), master will 
+assume that all nodes have been addressed and it closes the address command by repeating `0xFF` twice:
 
-`0x00 0x00`
+`0xFF 0xFF`
 
 In summary, the addressing looks like this for two slave nodes:
 
 ```
-master -> 0xFF 0xFF 0x00 <Address Command>
+master -> 0xFF 0xFF 0x00 <Address Command> 0x00 0x02
 master -> {next daisy pin high}
 master -> 0x00
 node1  -> 0x01
@@ -249,24 +246,25 @@ node1  -> {next daisy pin high}
 node2  -> 0x02
 master -> 0x02
 node2  -> {next daisy pin high}
-master -> 0x00 0x00
+master -> 0xFF 0xFF
 ```
 
 If node2 initially sent the wrong address, it would look like this:
 
 ```
-master -> 0xFF 0xFF 0x00 <Address Command>
+master -> 0xFF 0xFF 0x00 <Address Command> 0x00 0x02
 master -> {next daisy pin high}
 master -> 0x00
 node1  -> 0x01
 master -> 0x01
 node1  -> {next daisy pin high}
 node2  -> 0x05 (invalid address, not 1 greater than the previous)
-master -> 0x02 (master correcting node)
+master -> 0x00 (master correcting node)
+master -> 0x01 (last valid address) 
 node2  -> 0x02 (node responding with correct address)
 master -> 0x02 (master confirming correct address)
 node2  -> {next daisy pin high}
-master -> 0x00 0x00
+master -> 0xFF 0xFF
 ```
 
 If master is never able to correct a node sending the wrong address, master closes the addressing message (`0x00 0x00`) and the entire addressing operation ends in error status.

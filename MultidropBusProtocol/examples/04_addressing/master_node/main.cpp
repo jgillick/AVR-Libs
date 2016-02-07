@@ -29,7 +29,10 @@ MultidropMaster master(&serial);
 
 int main() {
   uint32_t t;
-  uint8_t default_response[1] = {0};
+  uint8_t default_response[2] = {0, 0};
+
+  // Wait for all nodes to come online
+  _delay_ms(5);
 
   // Setup serial and clock
   serial.begin(9600);
@@ -51,8 +54,8 @@ int main() {
   while(1) {
 
     // Start message asking for button values
+    master.setResponseSettings(response_buff, getTime(), 5, default_response);
     master.startMessage(0x02, MultidropMaster::BROADCAST_ADDRESS, 1, true, true);
-    master.setResponseSettings(response_buff, getTime(), 1, default_response);
 
     // Wait for response
     while(1) {
@@ -74,11 +77,12 @@ void addressNodes() {
   uint32_t t = getTime();
   MultidropMaster::adr_state_t response;
 
-  master.startAddressing(t, 10);
+  master.startAddressing(t, 5);
 
   // Wait for all nodes to finish being addressed
   while(1) {
-    response = master.checkForAddresses(t++);
+    t = getTime();
+    response = master.checkForAddresses(t);
     if (response != MultidropMaster::ADR_WAITING) {
       break;
     }
@@ -102,7 +106,7 @@ void updateLEDs() {
     PORTB |= (1 << PB1);
   }
   if (response_buff[1] == 1) {
-    PORTB |= (1 << PB1);
+    PORTB |= (1 << PB2);
   }
 }
 
@@ -117,15 +121,17 @@ uint32_t getTime() {
 void startClock() {
   current_time = 0;
 
-  // Fire interrupt every 1ms: (CLK_FREQ/TIMER_PRESCALER)*(1/1000)
-  OCR0A = (F_CPU/64) * (1/1000);
-
   TIMSK0 |= (1 << OCIE0A); // enabled timer
   TCCR0B |= (1 << CS01) | (1 << CS00); // prescaler = 64
   TCCR0A |= ( 1 << WGM01 ); // Timer mode = CTC
+
+  // Fire interrupt every 1ms: (CLK_FREQ * seconds) / TIMER_PRESCALER
+  OCR0A = (F_CPU * 1/1000) / 64;
+
+  sei();
 }
 
 // Interrupt to keep time
 ISR(TIMER0_COMPA_vect) {
-  current_time += 1;
+  current_time++;
 }
