@@ -49,6 +49,9 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
   }
   if (responseMessage) {
     flags |= RESPONSE_MESSAGE_FLAG;
+
+    // Don't timeout on first check
+    dontTimeout = true;
   }
 
   // Start sending header
@@ -85,6 +88,7 @@ void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   sendByte(0x00);
   setNextDaisyValue(1);
 
+  // Don't timeout on first check
   dontTimeout = true;
 }
 
@@ -105,6 +109,11 @@ void MultidropMaster::setResponseSettings(uint8_t *buff, uint32_t time, uint32_t
 uint8_t MultidropMaster::checkForResponses(uint32_t time) {
   uint8_t b, i;
 
+  if (dontTimeout) {
+    timeoutTime = time + timeoutDuration;
+  }
+  dontTimeout = false;
+
   // Received all responses
   if (waitingOnNodes == 0) {
     finishMessage();
@@ -118,7 +127,7 @@ uint8_t MultidropMaster::checkForResponses(uint32_t time) {
     messageCRC = _crc16_update(messageCRC, b);
 
     responseIndex++;
-    timeoutTime = time + timeoutDuration;
+    dontTimeout = true;
 
     // Have we received all the data for this node?
     if (responseIndex % dataLength == 0) {
@@ -136,7 +145,7 @@ uint8_t MultidropMaster::checkForResponses(uint32_t time) {
       responseIndex++;
     }
 
-    timeoutTime = time + timeoutDuration;
+    dontTimeout = true;
     waitingOnNodes--;
   }
 

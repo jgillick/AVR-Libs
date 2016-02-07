@@ -54,7 +54,7 @@ int main() {
   while(1) {
 
     // Start message asking for button values
-    master.setResponseSettings(response_buff, getTime(), 5, default_response);
+    master.setResponseSettings(response_buff, getTime(), 2, default_response);
     master.startMessage(0x02, MultidropMaster::BROADCAST_ADDRESS, 1, true, true);
 
     // Wait for response
@@ -77,7 +77,7 @@ void addressNodes() {
   uint32_t t = getTime();
   MultidropMaster::adr_state_t response;
 
-  master.startAddressing(t, 5);
+  master.startAddressing(t, 2);
 
   // Wait for all nodes to finish being addressed
   while(1) {

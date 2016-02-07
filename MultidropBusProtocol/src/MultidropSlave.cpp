@@ -192,26 +192,30 @@ void MultidropSlave::parseHeader(uint8_t b) {
     parseState = DATA_SECTION;
   }
 
-  // On to addressing
-  if (parseState == DATA_SECTION && command == CMD_ADDRESS) {
-    setNextDaisyValue(0);
-    parsePos = ADDR_UNSET;
-  }
+  // Finishing header
+  if (parseState == DATA_SECTION) {
 
-  // No data, continue to CRC
-  if (parseState == DATA_SECTION && length == 0) {
-    parseState = END_SECTION;
-  }
+    // On to addressing
+    if (command == CMD_ADDRESS) {
+      parsePos = ADDR_UNSET;
+    }
 
-  // If in response message and we're the first node, move straight to sending a response
-  else if (parseState == DATA_SECTION && isResponseMessage() && myAddress == 1) {
-    sendResponse();
+    // No data, continue to CRC
+    else if (length == 0) {
+      parseState = END_SECTION;
+    }
+
+    // If in response message and we're the first node, move straight to sending a response
+    else if (isResponseMessage() && myAddress == 1) {
+      sendResponse();
+    }
   }
 }
 
 void MultidropSlave::processData(uint8_t b) {
   messageCRC = _crc16_update(messageCRC, b);
   parsePos = DATA_POS;
+  fullDataIndex++;
 
   // Provide a response to fill our data section
   if (isResponseMessage() && fullDataIndex == dataStartOffset) {
@@ -224,7 +228,6 @@ void MultidropSlave::processData(uint8_t b) {
     dataBuffer[dataIndex++] = b;
     dataBuffer[dataIndex] = '\0';
   }
-  fullDataIndex++;
 
   // Done with data
   if (fullDataIndex >= fullDataLength) {
