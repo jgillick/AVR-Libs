@@ -42,6 +42,10 @@ public:
                       uint8_t batchMode=false,
                       uint8_t responseMessage=false);
 
+  // Send a reset message to all nodes, which tells them to forget their address and 
+  // drop their daisy lines to low.
+  void resetAllNodes();
+
   // Start the addressing processes
   // You'll need to call `checkForAddresses` regularly to handle the addressing process
   //   * time: The current system time (used for timeout).

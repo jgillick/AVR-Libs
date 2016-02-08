@@ -77,6 +77,9 @@ void addressNodes() {
   uint32_t t = getTime();
   MultidropMaster::adr_state_t response;
 
+  // Reset all nodes and then start addressing
+  master.resetAllNodes();
+  _delay_ms(5);
   master.startAddressing(t, 2);
 
   // Wait for all nodes to finish being addressed

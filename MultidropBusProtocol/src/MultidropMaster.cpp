@@ -71,16 +71,17 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
   return 1;
 }
 
+void MultidropMaster::resetAllNodes() {
+  startMessage(CMD_RESET, BROADCAST_ADDRESS);
+  finishMessage();
+}
+
 void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   nodeNum = 0;
   lastAddressReceived = 0;
   nodeAddressTries = 0;
   addrTimeoutDuration = timeout;
   timeoutTime = t + addrTimeoutDuration;
-
-  // Send reset message
-  startMessage(CMD_RESET, BROADCAST_ADDRESS);
-  finishMessage();
 
   // Start address message
   startMessage(CMD_ADDRESS, BROADCAST_ADDRESS, 2, true, true);
