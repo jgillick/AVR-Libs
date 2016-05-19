@@ -16,8 +16,8 @@ void MultidropMaster::setNodeLength(uint8_t num) {
 }
 
 void MultidropMaster::addNextDaisyChain(volatile uint8_t next_pin_num,
-                                    volatile uint8_t* next_ddr_register, 
-                                    volatile uint8_t* next_port_register, 
+                                    volatile uint8_t* next_ddr_register,
+                                    volatile uint8_t* next_port_register,
                                     volatile uint8_t* next_pin_register) {
 
   d1_num  = next_pin_num;
@@ -55,6 +55,7 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
   }
 
   // Start sending header
+  serial->enable_write();
   sendByte(0xFF);
   sendByte(0xFF);
   sendByte(flags);
@@ -66,6 +67,7 @@ uint8_t MultidropMaster::startMessage(uint8_t command,
     sendByte(nodeNum);
   }
   sendByte(dataLength);
+  serial->enable_read();
 
   state = HEADER_SENT;
   return 1;
@@ -164,8 +166,8 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
     timeoutTime = time + addrTimeoutDuration;
   }
   dontTimeout = false;
-  
-  if (state != ADDRESSING) return ADR_DONE; 
+
+  if (state != ADDRESSING) return ADR_DONE;
 
   // If master's prev daisy chain is HIGH, then the network has gone full circle
   if (isPrevDaisyHigh() == 1) {
@@ -181,14 +183,14 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
     }
 
     // Verify it's 1 larger than the last address and send confirmation
-    if (b == lastAddressReceived + 1) { 
+    if (b == lastAddressReceived + 1) {
       nodeNum++;
       lastAddressReceived = b;
       nodeAddressTries = 0;
       sendByte(b);
     }
     // Invalid address
-    else { 
+    else {
       // Max tries, end in error
       nodeAddressTries++;
       if (nodeAddressTries > MD_MASTER_ADDR_MAX_TRIES) {
@@ -224,7 +226,9 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
 uint8_t MultidropMaster::sendData(uint8_t d) {
   if (state == EOM) return 0;
 
+  serial->enable_write();
   sendByte(d);
+  serial->enable_read();
   state = DATA_SENDING;
   return 1;
 }
@@ -232,9 +236,11 @@ uint8_t MultidropMaster::sendData(uint8_t d) {
 uint8_t MultidropMaster::sendData(uint8_t *data, uint16_t len) {
   if (state == EOM) return 0;
 
+  serial->enable_write();
   for(uint16_t i = 0; i < len; i++) {
     sendData(data[i]);
   }
+  serial->enable_read();
 
   return 1;
 }
@@ -248,6 +254,8 @@ void MultidropMaster::sendByte(uint8_t b, uint8_t updateCRC) {
 
 uint8_t MultidropMaster::finishMessage() {
   if (state == EOM) return 0;
+
+  serial->enable_write();
 
   // Send NULL message to end the addressing stage
   if (state == ADDRESSING) {
@@ -264,10 +272,12 @@ uint8_t MultidropMaster::finishMessage() {
     sendByte(CMD_NULL); // command
     sendByte(0);        // length
   }
-  
+
   // End CRC
   sendByte((messageCRC >> 8) & 0xFF, false);
   sendByte(messageCRC & 0xff, false);
+
+  serial->enable_read();
 
   state = EOM;
   return 1;

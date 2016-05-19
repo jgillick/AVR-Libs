@@ -4,13 +4,17 @@
 ##########    Check these every time you start a new project    ##########
 ##########------------------------------------------------------##########
 
-MCU   = atmega168
+MCU   = atmega328p
+LFUSE = 0xFF
+HFUSE = 0xDF
+EFUSE = 0x04
 F_CPU = 16000000UL
 
-##  FUSE SETTINGS
-LFUSE = 0xFF
-HFUSE = 0xDA
-EFUSE = 0x05
+# MCU   = atmega168
+# F_CPU = 16000000UL
+# LFUSE = 0xFF
+# HFUSE = 0xDA
+# EFUSE = 0x05
 
 ## A directory for common include files
 LIBDIR = ../../../src/
@@ -26,7 +30,7 @@ SOURCES = ../../../src/*.cpp
 
 PROGRAMMER_TYPE = usbtiny
 # extra arguments to avrdude: baud rate, chip type, -F flag, etc.
-PROGRAMMER_ARGS = -B .1
+PROGRAMMER_ARGS =
 
 ##########------------------------------------------------------##########
 ##########                  Program Locations                   ##########
@@ -139,7 +143,7 @@ flash: $(TARGET).hex
 	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U flash:w:$<
 
 ## An alias
-program: flash
+program: flash size
 
 flash_eeprom: $(TARGET).eeprom
 	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U eeprom:w:$<

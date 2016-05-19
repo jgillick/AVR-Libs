@@ -27,6 +27,10 @@ public:
 
   // Clears the RX buffer
   void clear();
+
+  // Not implemented
+  void enable_write();
+  void enable_read();
 };
 
 #endif

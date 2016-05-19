@@ -53,10 +53,6 @@ static volatile uint8_t tx_buffer_tail;
 static volatile uint8_t rx_buffer_head;
 static volatile uint8_t rx_buffer_tail;
 
-static volatile uint8_t isRS485 = false;
-static volatile uint8_t rs485_de_pin;
-static volatile uint8_t* rs485_de_port;
-
 ////////////////////////////////////////////
 /// Class members
 ////////////////////////////////////////////
@@ -134,6 +130,10 @@ void MultidropDataUart::flush() {
   // Wait for the transmit to complete
   while (!(UART0_UCSRA & (1 << UART0_TXC)));
 }
+
+// Not implemented
+void MultidropDataUart::enable_write() { }
+void MultidropDataUart::enable_read() { }
 
 ////////////////////////////////////////////
 /// Interrupt Controls

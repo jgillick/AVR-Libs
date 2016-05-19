@@ -17,20 +17,25 @@
 int main() {
   uint8_t iteration = 1, i = 0;
 
+  DDRB |= (1 << PB2);
+  PORTB |= (1 << PB2);
+
   MultidropData485 rs485(PD2, &DDRD, &PORTD);
 	MultidropMaster master(&rs485);
 
   rs485.begin(9600);
   master.setNodeLength(NODE_COUNT);
-  
+
   while(1) {
     master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, true);
 
     // Send alternating 1s and 0s
     for (i = 0; i < NODE_COUNT; i++) {
       if ((i + iteration) % 2 == 0) {
+        PORTB |= (1 << PB2);
         master.sendData(0x01);
       } else {
+        PORTB &= ~(1 << PB2);
         master.sendData(0x00);
       }
     }

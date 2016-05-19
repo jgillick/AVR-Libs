@@ -3,14 +3,14 @@
 #define MultidropData_H
 
 /************************************************************************************
- *  A virtual class that is inherited to define how data is received from the 
- *  bus transceiver. Most transceiver will connect to your microcontroller via one 
+ *  A virtual class that is inherited to define how data is received from the
+ *  bus transceiver. Most transceiver will connect to your microcontroller via one
  *  of the UART ports. In that case, you can create a custom class to interface with
  *  with the appropriate port.
  *
- *  MultidropUart has been subclassed from this to interface with the UART0 port of 
+ *  MultidropUart has been subclassed from this to interface with the UART0 port of
  *  Atmega8 chips.
- * 
+ *
  ************************************************************************************/
 
 #include <avr/io.h>
@@ -35,6 +35,12 @@ public:
 
   // Clears the RX buffer
   virtual void clear();
+
+  // Enables writing from the data stream (only required for 485 and similar protocols)
+  virtual void enable_write();
+
+  // Enables reading from the data stream (only required for 485 and similar protocols)
+  virtual void enable_read();
 };
 
 #endif
