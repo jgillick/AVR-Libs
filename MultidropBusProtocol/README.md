@@ -78,7 +78,7 @@ A full message would look something like this:
  0xFF 0xFF  - The start of the message
  <Flags>    - Flags about the messages
  <Address>  - The node the message is going to (0 - 255)
- <Command>  - The type of command that's being sent (see next paragraph)
+ <Command>  - The type of command that's being sent
  <Length>   - The length of the message, if in individual mode (limited to MD_MAX_DATA_LEN). 
               If in batch mode, it's 2 bytes: first is the total number of 
               slave nodes and the second is the number of bytes per node (limited to MD_MAX_DATA_LEN).
