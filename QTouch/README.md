@@ -19,3 +19,7 @@ of the sensor.
 
 Define your settings in `touch.h` and `touch_control.cpp` based on the settings defined
 in the [QTouch Library Documentation](http://www.atmel.com/Images/doc8207.pdf).
+
+## IMPORTANT
+
+When you compile this you MUST include the `-fshort-enums` compilation flag.
