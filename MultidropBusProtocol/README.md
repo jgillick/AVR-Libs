@@ -78,7 +78,7 @@ A full message would look something like this:
  0xFF 0xFF  - The start of the message
  <Flags>    - Flags about the messages
  <Address>  - The node the message is going to (0 - 255)
- <Command>  - The type of command that's being sent (see next paragraph)
+ <Command>  - The type of command that's being sent
  <Length>   - The length of the message, if in individual mode (limited to MD_MAX_DATA_LEN).
               If in batch mode, it's 2 bytes: first is the total number of
               slave nodes and the second is the number of bytes per node (limited to MD_MAX_DATA_LEN).
@@ -222,7 +222,7 @@ address by 1, to `0x01`, sends that to the bus and waits for confirmation:
 `0x01`
 
 Master receives this address and confirms by sending that address back to the bus
-(if the node sends an invalid address, master will resend the last valid address instead):
+(if the node sends an invalid address, master will send `0x00` and then last valid address, again):
 
 `0x01`
 
@@ -267,7 +267,17 @@ node2  -> {next daisy pin high}
 master -> 0xFF 0xFF
 ```
 
-If master is never able to correct a node sending the wrong address, master closes the addressing message (`0x00 0x00`) and the entire addressing operation ends in error status.
+If master is never able to correct a node sending the wrong address, master closes the addressing message (`0xFF 0xFF`) and the entire addressing operation ends in error status.
+
+#### NULL message
+
+Since most message start with `0xFF 0xFF`, master will use those as the start of a `NULL` message. This is in case any nodes started listening half-way through addressing and thought the end of addressing was the beginning of a new message.
+
+So the actual end of the addressing message looks like this:
+
+```
+<addressing message...> 0xFF 0xFF 0x00 0x00 <NULL Command> 0x00 <CRC Bytes>
+```
 
 ### Another ending option
 The last node could also connect it's outgoing daisy line back to master, so that it
