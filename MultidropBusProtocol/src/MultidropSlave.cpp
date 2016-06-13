@@ -75,12 +75,12 @@ uint8_t MultidropSlave::read() {
   if (parseState == MESSAGE_READY) {
     parseState = NO_MESSAGE;
   }
-  
-  // We're addressing and our prev daisy line went high after the last address was received
+
+  // No new data, but our prev daisy line just went high
   if (command == CMD_ADDRESS && parsePos == ADDR_UNSET && isPrevDaisyHigh() && !serial->available()){
     processAddressing(lastAddr);
   }
-  
+
   // Handle incoming bytes
   while (serial->available()) {
     if(parse(serial->read()) == 1 && !isResponseMessage()) {
@@ -127,7 +127,7 @@ uint8_t MultidropSlave::parse(uint8_t b) {
     else if (parsePos == EOM2_POS) {
       parseState = MESSAGE_READY;
       return 1;
-    } 
+    }
   }
   // Second start byte
   else if (parseState == START_SECTION) {
@@ -197,7 +197,7 @@ void MultidropSlave::parseHeader(uint8_t b) {
 
     // On to addressing
     if (command == CMD_ADDRESS) {
-      parsePos = ADDR_UNSET;
+      parsePos = ADDR_WAITING;
     }
 
     // No data, continue to CRC
@@ -236,7 +236,7 @@ void MultidropSlave::processData(uint8_t b) {
 }
 
 
-void MultidropSlave::processAddressing(uint8_t b) { 
+void MultidropSlave::processAddressing(uint8_t b) {
 
   // We still waiting for an address
   if (myAddress == 0 && isPrevDaisyHigh() && !serial->available()){
@@ -275,7 +275,12 @@ void MultidropSlave::processAddressing(uint8_t b) {
   if (parsePos != ADDR_SENT && lastAddr == b && b == 0xFF) {
     doneAddressing();
   }
+
   lastAddr = b;
+
+  if (parsePos == ADDR_WAITING) {
+    parsePos = ADDR_UNSET;
+  }
 }
 
 void MultidropSlave::doneAddressing() {

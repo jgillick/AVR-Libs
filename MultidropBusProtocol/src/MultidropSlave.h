@@ -34,7 +34,7 @@ public:
   // There a new message ready to read
   uint8_t hasNewMessage();
 
-  // Is this message addressed to our node 
+  // Is this message addressed to our node
   // (directly or indirectly via a broadcast message)
   uint8_t isAddressedToMe();
 
@@ -79,16 +79,16 @@ private:
     SOM2_POS,        // Start of message (second byte)
     HEADER_FLAGS_POS,
     HEADER_ADDR_POS,
-    HEADER_CMD_POS, 
+    HEADER_CMD_POS,
     HEADER_LEN1_POS,
     HEADER_LEN2_POS,
     DATA_POS,
     EOM1_POS,
     EOM2_POS,
-    ADDR_UNSET,
-    ADDR_SENT,
-    ADDR_CONFIRMED,
-    ADDR_UNCONFIRMED
+    ADDR_WAITING,   // Addressing: command started, but no initial address
+    ADDR_UNSET,     // Addressing: addressed not received for this node
+    ADDR_SENT,      // Addressing: sent address to master
+    ADDR_CONFIRMED  // Addressing: master confirmed address
   };
 
   enum msg_state_t  parseState;

@@ -88,8 +88,10 @@ void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
   // Start address message
   startMessage(CMD_ADDRESS, BROADCAST_ADDRESS, 2, true, true);
   state = ADDRESSING;
-  sendByte(0x00);
+
+  // First address
   setNextDaisyValue(1);
+  sendByte(0x00, true);
 
   // Don't timeout on first check
   dontTimeout = true;
@@ -143,7 +145,7 @@ uint8_t MultidropMaster::checkForResponses(uint32_t time) {
 
     // It's possible the node sent a partial response, so send whatever is left
     for (i = responseIndex % dataLength; i < dataLength; i++) {
-      sendByte(defaultResponseValues[i]);
+      sendByte(defaultResponseValues[i], true);
       responseBuff[responseIndex] = defaultResponseValues[i];
       responseIndex++;
     }
@@ -187,10 +189,11 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
       nodeNum++;
       lastAddressReceived = b;
       nodeAddressTries = 0;
-      sendByte(b);
+      sendByte(b, true);
     }
     // Invalid address
     else {
+
       // Max tries, end in error
       nodeAddressTries++;
       if (nodeAddressTries > MD_MASTER_ADDR_MAX_TRIES) {
@@ -198,8 +201,10 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
       }
       // Send last valid address again
       else {
+        serial->enable_write();
         sendByte(0x00);
         sendByte(lastAddressReceived);
+        serial->enable_read();
       }
     }
     return ADR_WAITING;
@@ -226,9 +231,7 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
 uint8_t MultidropMaster::sendData(uint8_t d) {
   if (state == EOM) return 0;
 
-  serial->enable_write();
-  sendByte(d);
-  serial->enable_read();
+  sendByte(d, true);
   state = DATA_SENDING;
   return 1;
 }
@@ -238,18 +241,22 @@ uint8_t MultidropMaster::sendData(uint8_t *data, uint16_t len) {
 
   serial->enable_write();
   for(uint16_t i = 0; i < len; i++) {
-    sendData(data[i]);
+    sendByte(data[i]);
   }
   serial->enable_read();
-
+  state = DATA_SENDING;
   return 1;
 }
 
-void MultidropMaster::sendByte(uint8_t b, uint8_t updateCRC) {
+void MultidropMaster::sendByte(uint8_t b, uint8_t directionCntrl, uint8_t updateCRC) {
+  if (directionCntrl) serial->enable_write();
   serial->write(b);
+  if (directionCntrl) serial->enable_read();
+
   if (updateCRC) {
     messageCRC = _crc16_update(messageCRC, b);
   }
+
 }
 
 uint8_t MultidropMaster::finishMessage() {

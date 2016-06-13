@@ -28,11 +28,11 @@ public:
   void setNodeLength(uint8_t);
 
   // Add the pin and registers for the next daisy chain line
-  // This is for master nodes that only have an out line and the 
+  // This is for master nodes that only have an out line and the
   // bus does not come back around to master
   void addNextDaisyChain(volatile uint8_t next_pin_num,
-                         volatile uint8_t* next_ddr_register, 
-                         volatile uint8_t* next_port_register, 
+                         volatile uint8_t* next_ddr_register,
+                         volatile uint8_t* next_port_register,
                          volatile uint8_t* next_pin_register);
 
   // Start a new message to send
@@ -42,7 +42,7 @@ public:
                       uint8_t batchMode=false,
                       uint8_t responseMessage=false);
 
-  // Send a reset message to all nodes, which tells them to forget their address and 
+  // Send a reset message to all nodes, which tells them to forget their address and
   // drop their daisy lines to low.
   void resetAllNodes();
 
@@ -52,7 +52,7 @@ public:
   //   * timeout: How long master will wait for each node to respond. You will need to call
   //        checkForAddresses frequently to check for responses and timeout nodes
   void startAddressing(uint32_t time, uint32_t timeout);
-  
+
   // Check for new addresses received
   adr_state_t checkForAddresses(uint32_t time);
 
@@ -106,7 +106,7 @@ private:
           *defaultResponseValues;
 
   // Send a byte and, optionally, update the messageCRC value
-  void sendByte(uint8_t b, uint8_t updateCRC=1);
+  void sendByte(uint8_t b, uint8_t directionCntrl=0, uint8_t updateCRC=1);
 };
 
 #endif

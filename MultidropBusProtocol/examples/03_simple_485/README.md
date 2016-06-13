@@ -13,6 +13,8 @@ RS485 bus through a common 485 transceiver, like the Maxim MAX487E.
    * `DE` / `RE` -> `PD2`
  * Connected both transceiver together by their A/B pins (`A` -> `A`, `B` -> `B`).
  * On the slave AVR, connect an LED from `PD2` to ground (with a current limiting resistor).
+ * Optionally, you can also attach an LED on master from `PD2` to ground (with a current limiting resistor).
+   and it will blink ever time it tells the slave AVR to blink.
 
 Now add power to both AVRs and you should see the LED blink every second.
 

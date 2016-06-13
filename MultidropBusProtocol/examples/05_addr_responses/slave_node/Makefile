@@ -4,17 +4,18 @@
 ##########    Check these every time you start a new project    ##########
 ##########------------------------------------------------------##########
 
-# MCU   = atmega328p
-# LFUSE = 0xFF
-# HFUSE = 0xDF
-# EFUSE = 0x04
-# F_CPU = 20000000UL
-
 MCU   = atmega168
+F_CPU = 16000000UL
+
+##  FUSE SETTINGS
+# atmega168
 LFUSE = 0xFF
 HFUSE = 0xDA
 EFUSE = 0x05
-F_CPU = 16000000UL
+# atmega328
+# LFUSE = 0xFF
+# HFUSE = 0xDD
+# EFUSE = 0xFA
 
 ## A directory for common include files
 LIBDIR = ../../../src/

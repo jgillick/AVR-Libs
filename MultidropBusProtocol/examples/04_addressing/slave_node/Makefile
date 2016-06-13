@@ -4,18 +4,17 @@
 ##########    Check these every time you start a new project    ##########
 ##########------------------------------------------------------##########
 
-MCU   = atmega168
-F_CPU = 16000000UL
+# MCU   = atmega328p
+# LFUSE = 0xFF
+# HFUSE = 0xDF
+# EFUSE = 0x04
+# F_CPU = 20000000UL
 
-##  FUSE SETTINGS
-# atmega168
+MCU   = atmega168
 LFUSE = 0xFF
 HFUSE = 0xDA
 EFUSE = 0x05
-# atmega328
-# LFUSE = 0xFF
-# HFUSE = 0xDD
-# EFUSE = 0xFA
+F_CPU = 16000000UL
 
 ## A directory for common include files
 LIBDIR = ../../../src/
@@ -31,7 +30,7 @@ SOURCES = ../../../src/*.cpp
 
 PROGRAMMER_TYPE = usbtiny
 # extra arguments to avrdude: baud rate, chip type, -F flag, etc.
-PROGRAMMER_ARGS = -B .1
+PROGRAMMER_ARGS = -B .1 -e
 
 ##########------------------------------------------------------##########
 ##########                  Program Locations                   ##########
@@ -68,12 +67,12 @@ OBJECTS=$(SOURCES:.cpp=.o)
 HEADERS=$(SOURCES:.cpp=.h)
 
 ## Compilation options, type man avr-gcc if you're curious.
-CPPFLAGS = -DF_CPU=$(F_CPU) -I. -I$(LIBDIR) -Os
 CFLAGS = -Os -g -std=gnu99 -Wall
 ## Use short (8-bit) data types
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 ## Splits up object files per function
 CFLAGS += -ffunction-sections -fdata-sections
+CPPFLAGS = $(CFLAGS) -DF_CPU=$(F_CPU) -I. -I$(LIBDIR) -O
 LDFLAGS = -Wl,-Map,$(TARGET).map
 ## Optional, but often ends up with smaller code
 LDFLAGS += -Wl,--gc-sections

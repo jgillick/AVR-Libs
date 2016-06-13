@@ -19,6 +19,7 @@
 void startClock();
 uint32_t getTime();
 void addressNodes();
+void updateLEDs();
 
 uint8_t response_buff[254];
 volatile uint32_t current_time;
@@ -27,51 +28,48 @@ MultidropData485 serial(PD2, &DDRD, &PORTD);
 MultidropMaster master(&serial);
 
 int main() {
-  uint8_t targetNode = 0;
+  uint32_t t;
+  uint8_t default_response[2] = {0, 0};
+
+  // Wait for all nodes to come online
+  _delay_ms(5);
 
   // Setup serial and clock
   serial.begin(9600);
   startClock();
 
-  // Debugging LEDs
-  DDRD |= (1 << PD5) | (1 << PD6);
+  // Init LEDs
   DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-
-  PORTB |= (1 << PB1);
-
-  // Wait for all nodes to come online
-  _delay_ms(1000);
+  PORTB &= ~(1 << PB0) & ~(1 << PB1) & ~(1 << PB2);
 
   // Set daisy chain
-  master.addDaisyChain(PC3, &DDRC, &PORTC, &PINC,
-                       PC4, &DDRC, &PORTC, &PINC);
+  master.addDaisyChain(PD5, &DDRD, &PORTD, &PIND,
+                       PD6, &DDRD, &PORTD, &PIND);
   master.setDaisyChainPolarity(1, 2);
-
-  PORTB &= ~(1 << PB1);
-  PORTB |= (1 << PB2);
-  _delay_ms(1000);
 
   // Addressing
   addressNodes();
 
-  // Now start blinking some LEDs
+  // Now handle responding to button presses
   while(1) {
-    master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, true);
 
-    // Send alternating 1s and 0s
-    for (uint8_t i = 1; i <= master.nodeNum; i++) {
-      if (i == targetNode){
-        master.sendData(0x01);
-      } else {
-        master.sendData(0x00);
+    // Start message asking for button values
+    master.setResponseSettings(response_buff, getTime(), 2, default_response);
+    master.startMessage(0x02, MultidropMaster::BROADCAST_ADDRESS, 1, true, true);
+
+    // Wait for response
+    while(1) {
+      t = getTime();
+      if (master.checkForResponses(t)) {
+        break;
       }
     }
 
-    targetNode++;
-    if (targetNode > master.nodeNum) {
-      targetNode = 0;
-    }
-    _delay_ms(1000);
+    // Close the message
+    master.finishMessage();
+
+    // Light the LEDs
+    updateLEDs();
   }
 }
 
@@ -95,18 +93,25 @@ void addressNodes() {
 
   // Finished successfully
   if (response == MultidropMaster::ADR_DONE) {
-    PORTB &= ~(1 << PB1) & ~(1 << PB2);
     PORTB |= (1 << PB0);
   }
   // Error, try again in a few ms
   else if (response == MultidropMaster::ADR_ERROR) {
-    PORTB &= ~(1 << PB0) & ~(1 << PB2);
-    PORTB |= (1 << PB1);
     _delay_ms(3);
     addressNodes();
   }
 }
 
+void updateLEDs() {
+  PORTB &= ~(1 << PB1) & ~(1 << PB2);
+
+  if (response_buff[0] == 1) {
+    PORTB |= (1 << PB1);
+  }
+  if (response_buff[1] == 1) {
+    PORTB |= (1 << PB2);
+  }
+}
 
 // Get current time, in milliseconds
 uint32_t getTime() {
@@ -124,7 +129,7 @@ void startClock() {
   TCCR0A |= ( 1 << WGM01 ); // Timer mode = CTC
 
   // Fire interrupt every 1ms: (CLK_FREQ * seconds) / TIMER_PRESCALER
-  OCR0A = (uint16_t)(F_CPU * 1/1000) / 64;
+  OCR0A = (F_CPU * 1/1000) / 64;
 
   sei();
 }
