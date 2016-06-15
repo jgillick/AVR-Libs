@@ -34,9 +34,6 @@ extern qt_touch_lib_measure_data_t qt_measure_data;
  *============================================================================*/
 void touch_init( void ) {
 
-  // Disable pull-ups
-  MCUCR |= (1u << PUD);
-
   /* Configure the Sensors as keys or Keys With Rotor/Sliders in this function */
   config_sensors();
 
@@ -58,7 +55,11 @@ void touch_init( void ) {
  *============================================================================*/
 uint8_t touch_measure(uint8_t sensor_num, uint16_t current_time, uint8_t max_measurements) {
 
-	/* status flags to indicate the re-burst for library */
+  // Disable all pull-ups
+  uint8_t mcuRegister = MCUCR;
+  MCUCR |= (1 << PUD);
+
+	// status flags to indicate the re-burst for library
   static uint16_t status_flag = 0u;
   static uint16_t burst_flag = 0u;
   uint8_t measure_count = 0;
@@ -68,6 +69,9 @@ uint8_t touch_measure(uint8_t sensor_num, uint16_t current_time, uint8_t max_mea
     burst_flag = status_flag & QTLIB_BURST_AGAIN;
     measure_count++;
   } while (burst_flag && measure_count < max_measurements);
+
+  // Reset pull-ups
+  MCUCR = mcuRegister;
 
   return GET_SENSOR_STATE(sensor_num);
 }
