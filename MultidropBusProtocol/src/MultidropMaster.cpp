@@ -16,17 +16,17 @@ void MultidropMaster::setNodeLength(uint8_t num) {
 }
 
 void MultidropMaster::addNextDaisyChain(volatile uint8_t next_pin_num,
-                                    volatile uint8_t* next_ddr_register,
-                                    volatile uint8_t* next_port_register,
-                                    volatile uint8_t* next_pin_register) {
+                                        volatile uint8_t* next_ddr_register,
+                                        volatile uint8_t* next_port_register,
+                                        volatile uint8_t* next_pin_register) {
 
   d1_num  = next_pin_num;
   d1_ddr  = next_ddr_register;
   d1_port = next_port_register;
   d1_pin  = next_pin_register;
 
-  *d1_ddr &= ~(1 << d1_num);
-  *d1_port &= ~(1 << d1_num);
+  *d1_ddr |= (1 << d1_num);
+  *d1_port |= (1 << d1_num);
 
   daisy_prev = 0;
   daisy_next = 1;
@@ -78,12 +78,12 @@ void MultidropMaster::resetAllNodes() {
   finishMessage();
 }
 
-void MultidropMaster::startAddressing(uint32_t t, uint32_t timeout) {
+void MultidropMaster::startAddressing(uint32_t time, uint32_t timeout) {
   nodeNum = 0;
   lastAddressReceived = 0;
   nodeAddressTries = 0;
   addrTimeoutDuration = timeout;
-  timeoutTime = t + addrTimeoutDuration;
+  timeoutTime = time + addrTimeoutDuration;
 
   // Start address message
   startMessage(CMD_ADDRESS, BROADCAST_ADDRESS, 2, true, true);
@@ -172,7 +172,7 @@ MultidropMaster::adr_state_t MultidropMaster::checkForAddresses(uint32_t time) {
   if (state != ADDRESSING) return ADR_DONE;
 
   // If master's prev daisy chain is HIGH, then the network has gone full circle
-  if (isPrevDaisyHigh() == 1) {
+  if (isPrevDaisyEnabled() == 1) {
     finishMessage();
     return ADR_DONE;
   }
@@ -256,7 +256,6 @@ void MultidropMaster::sendByte(uint8_t b, uint8_t directionCntrl, uint8_t update
   if (updateCRC) {
     messageCRC = _crc16_update(messageCRC, b);
   }
-
 }
 
 uint8_t MultidropMaster::finishMessage() {
@@ -274,6 +273,7 @@ uint8_t MultidropMaster::finishMessage() {
     }
 
     // Send null message, just in case
+    messageCRC = ~0;
     sendByte(0x00);     // flags
     sendByte(0x00);     // broadcast address
     sendByte(CMD_NULL); // command
@@ -281,8 +281,8 @@ uint8_t MultidropMaster::finishMessage() {
   }
 
   // End CRC
-  sendByte((messageCRC >> 8) & 0xFF, false);
-  sendByte(messageCRC & 0xff, false);
+  sendByte((messageCRC >> 8) & 0xFF, false, false);
+  sendByte(messageCRC & 0xff, false, false);
 
   serial->enable_read();
 

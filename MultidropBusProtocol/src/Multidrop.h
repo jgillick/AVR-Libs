@@ -23,17 +23,17 @@ public:
 
   Multidrop(MultidropData*);
 
-  // Add the pin and registers for the daisy chain lines. 
+  // Add the pin and registers for the daisy chain lines.
   // There should be two and polarity is determined at runtime
   // (i.e. the first one to go HIGH is 'previous' and the other is 'next')
   void addDaisyChain(volatile uint8_t d1_pin_num,
-                     volatile uint8_t* d1_ddr_register, 
-                     volatile uint8_t* d1_port_register, 
+                     volatile uint8_t* d1_ddr_register,
+                     volatile uint8_t* d1_port_register,
                      volatile uint8_t* d1_pin_register,
 
                      volatile uint8_t d2_pin_num,
-                     volatile uint8_t* d2_ddr_register, 
-                     volatile uint8_t* d2_port_register, 
+                     volatile uint8_t* d2_ddr_register,
+                     volatile uint8_t* d2_port_register,
                      volatile uint8_t* d2_pin_register);
 
   // Get the daisy chain number (1 or 2) for the previous node
@@ -45,7 +45,7 @@ public:
   uint8_t getDaisyChainNext();
 
   // Set the daisy chain polarity
-  // next and prev should be set to 1 or 2, to match 
+  // next and prev should be set to 1 or 2, to match
   // the pins for d1_* and d2* defined in addDaisyChain
   void setDaisyChainPolarity(uint8_t next, uint8_t prev);
 
@@ -77,11 +77,11 @@ protected:
   // Try to determine the next/prev daisy chain pins
   void checkDaisyChainPolarity();
 
-  // Set the next daisy chain pin to HIGH or LOW (1 or 0)
+  // Set the next daisy chain pin to active or inactive (1 or 0)
   void setNextDaisyValue(uint8_t val);
 
   // Get the value (1 or 0) from the prev daisy chain pin
-  uint8_t isPrevDaisyHigh();
+  uint8_t isPrevDaisyEnabled();
 
 };
 

@@ -49,9 +49,9 @@ public:
   // Start the addressing processes
   // You'll need to call `checkForAddresses` regularly to handle the addressing process
   //   * time: The current system time (used for timeout).
-  //   * timeout: How long master will wait for each node to respond. You will need to call
-  //        checkForAddresses frequently to check for responses and timeout nodes
-  void startAddressing(uint32_t time, uint32_t timeout);
+  //   * timeout: (optional) How long master will wait for each node to respond (based on time units).
+  //              You will need to call checkForAddresses frequently to check for responses and timeout nodes
+  void startAddressing(uint32_t time, uint32_t timeout=10);
 
   // Check for new addresses received
   adr_state_t checkForAddresses(uint32_t time);

@@ -102,7 +102,7 @@ This is an 8-bit flag that represents the nature of the message.
 
 ### Node address
 
-The address the message is going to. Slave node addresses start counting at 1 and  0 means the
+The address the message is going to. Slave node addresses start counting at 1. 0 means the
 message applies to all nodes. Master does not have an address, as it coordinates all messages.
 
 ### Command
@@ -111,7 +111,7 @@ A byte that represents what this message is for.
 
 #### Reserved commands:
 
-These commnads are reserved and used by the system.
+These commands are reserved and used by the system.
 
  * `0xFA` - Reset node's address and daisy lines.
  * `0xFB` - Automatic addressing (see section below).
@@ -207,16 +207,20 @@ The addressing method we use involves an extra daisy chain wire in addition to t
 This wire is connected from the master to the first node, then outgoing from the first node
 to the second and so on. Each node controls the outgoing portion of the daisy chain line.
 
+The daisy chain lines are active low. Meaning that at idle the AVR pull-up resister is pulling
+it to VCC. To enable the daisy line, you must pull it to ground. If you have internal pull-ups
+disabled, you'll need to pull it up manually.
+
 To address all nodes, master will first send out a global `reset` command that
 tells all nodes to forger their address. Then master starts a batch response message:
 
 `0xFF 0xFF 0x03 0x00 <Address Command> 0x00 0x02`
 
-It then sets the daisy chain line to the first node to `high` and sends `0x00` to the bus:
+It then enables the daisy chain line to the first node and sends `0x00` to the bus:
 
 `0x00`
 
-The first node will see it's incoming daisy line is `high` and increment the received
+The first node will see it's daisy line enabled and increment the received
 address by 1, to `0x01`, sends that to the bus and waits for confirmation:
 
 `0x01`
@@ -226,8 +230,8 @@ Master receives this address and confirms by sending that address back to the bu
 
 `0x01`
 
-The first node receives the confirmation, assigns the to itself and raises it's outgoing daisy
-line to `high` so the next node can address itself.
+The first node receives the confirmation, assigns the address to itself and enables it's
+outgoing daisy line so the next node can address itself.
 
 This continues for all nodes on the bus. If the bus is quiet for too long (timeout), master will
 assume that all nodes have been addressed and it closes the address command by repeating `0xFF` twice:
@@ -238,14 +242,14 @@ In summary, the addressing looks like this for two slave nodes:
 
 ```
 master -> 0xFF 0xFF 0x03 0x00 <Address Command> 0x00 0x02
-master -> {next daisy pin high}
+master -> {next daisy enabled}
 master -> 0x00
 node1  -> 0x01
 master -> 0x01
-node1  -> {next daisy pin high}
+node1  -> {next daisy enabled}
 node2  -> 0x02
 master -> 0x02
-node2  -> {next daisy pin high}
+node2  -> {next daisy enabled}
 master -> 0xFF 0xFF
 ```
 
@@ -253,17 +257,17 @@ If node2 initially sent the wrong address, it would look like this:
 
 ```
 master -> 0xFF 0xFF 0x03 0x00 <Address Command> 0x00 0x02
-master -> {next daisy pin high}
+master -> {next daisy enabled}
 master -> 0x00
 node1  -> 0x01
 master -> 0x01
-node1  -> {next daisy pin high}
+node1  -> {next daisy enabled}
 node2  -> 0x05 (invalid address, not 1 greater than the previous)
 master -> 0x00 (master correcting node)
 master -> 0x01 (last valid address)
 node2  -> 0x02 (node responding with correct address)
 master -> 0x02 (master confirming correct address)
-node2  -> {next daisy pin high}
+node2  -> {next daisy enabled}
 master -> 0xFF 0xFF
 ```
 
@@ -280,12 +284,10 @@ So the actual end of the addressing message looks like this:
 ```
 
 ### Another ending option
-The last node could also connect it's outgoing daisy line back to master, so that it
-will be alerted when all nodes have been addressed. (this is not implemented)
+The last node can also connect it's outgoing daisy line back to master, so that it
+will be alerted when all nodes have been addressed.
 
 ### Fun Fact
 The direction of the daisy lines are determined dynamically. The node will wait
-to see which side goes `high` and then assume that this side is the input line.
-Note that it will save this direction to EEPROM and if a node is switched, master
-will need to send a reset message to reset the direction detection.
+to see which side becomes enabled and then assume that is the input daisy line.
 

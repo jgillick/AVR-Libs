@@ -85,7 +85,7 @@ private:
     DATA_POS,
     EOM1_POS,
     EOM2_POS,
-    ADDR_WAITING,   // Addressing: command started, but no initial address
+    ADDR_WAITING,   // Addressing: command started, but no initial address seen
     ADDR_UNSET,     // Addressing: addressed not received for this node
     ADDR_SENT,      // Addressing: sent address to master
     ADDR_CONFIRMED  // Addressing: master confirmed address

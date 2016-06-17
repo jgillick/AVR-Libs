@@ -77,7 +77,7 @@ uint8_t MultidropSlave::read() {
   }
 
   // No new data, but our prev daisy line just went high
-  if (command == CMD_ADDRESS && parsePos == ADDR_UNSET && isPrevDaisyHigh() && !serial->available()){
+  if (command == CMD_ADDRESS && parsePos == ADDR_UNSET && isPrevDaisyEnabled() && !serial->available()){
     processAddressing(lastAddr);
   }
 
@@ -239,7 +239,7 @@ void MultidropSlave::processData(uint8_t b) {
 void MultidropSlave::processAddressing(uint8_t b) {
 
   // We still waiting for an address
-  if (myAddress == 0 && isPrevDaisyHigh() && !serial->available()){
+  if (myAddress == 0 && isPrevDaisyEnabled() && !serial->available()){
 
     // Address confirmation
     if (parsePos == ADDR_SENT) {
@@ -265,7 +265,9 @@ void MultidropSlave::processAddressing(uint8_t b) {
     else if(b >= lastAddr) {
       b++;
       parsePos = ADDR_SENT;
+      serial->enable_write();
       serial->write(b);
+      serial->enable_read();
       lastAddr = b;
       return;
     }
@@ -294,10 +296,14 @@ void MultidropSlave::sendResponse() {
   if (responseHandler) {
     uint8_t i;
     responseHandler(command, dataBuffer, length);
+
+    // Write response buffer to stream
+    serial->enable_write();
     for (i = 0; i < length; i++) {
       serial->write(dataBuffer[i]);
       messageCRC = _crc16_update(messageCRC, dataBuffer[i]);
       fullDataIndex++;
     }
+    serial->enable_read();
   }
 }
