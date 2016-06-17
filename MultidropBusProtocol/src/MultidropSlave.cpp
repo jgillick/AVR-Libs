@@ -186,7 +186,7 @@ void MultidropSlave::parseHeader(uint8_t b) {
   else if (parsePos == HEADER_LEN1_POS) {
     length = b;
     fullDataLength = length * numNodes;
-    dataStartOffset = (myAddress - 1) * length; // Where our data starts in the message
+    dataStartOffset = myAddress-1 * length; // Where our data starts in the message
 
     parsePos = HEADER_LEN2_POS;
     parseState = DATA_SECTION;
@@ -215,7 +215,6 @@ void MultidropSlave::parseHeader(uint8_t b) {
 void MultidropSlave::processData(uint8_t b) {
   messageCRC = _crc16_update(messageCRC, b);
   parsePos = DATA_POS;
-  fullDataIndex++;
 
   // Provide a response to fill our data section
   if (isResponseMessage() && fullDataIndex == dataStartOffset) {
@@ -228,6 +227,8 @@ void MultidropSlave::processData(uint8_t b) {
     dataBuffer[dataIndex++] = b;
     dataBuffer[dataIndex] = '\0';
   }
+
+  fullDataIndex++;
 
   // Done with data
   if (fullDataIndex >= fullDataLength) {

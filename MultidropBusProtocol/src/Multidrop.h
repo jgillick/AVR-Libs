@@ -24,8 +24,10 @@ public:
   Multidrop(MultidropData*);
 
   // Add the pin and registers for the daisy chain lines.
-  // There should be two and polarity is determined at runtime
-  // (i.e. the first one to go HIGH is 'previous' and the other is 'next')
+  // To automatically define the polarity as d1=prev and d2=next, pass `set_polarity` as `true`.
+  // Otherwise, polarity will be determined at runtime by setting the first to
+  // be enabled as the previous daisy line.
+  // (you can also set polarity with the setDaisyChainPolarity() method)
   void addDaisyChain(volatile uint8_t d1_pin_num,
                      volatile uint8_t* d1_ddr_register,
                      volatile uint8_t* d1_port_register,
@@ -34,7 +36,9 @@ public:
                      volatile uint8_t d2_pin_num,
                      volatile uint8_t* d2_ddr_register,
                      volatile uint8_t* d2_port_register,
-                     volatile uint8_t* d2_pin_register);
+                     volatile uint8_t* d2_pin_register,
+
+                     uint8_t set_polarity=false);
 
   // Get the daisy chain number (1 or 2) for the previous node
   // this will return 0 if the polarity has not been determined yet
@@ -45,9 +49,9 @@ public:
   uint8_t getDaisyChainNext();
 
   // Set the daisy chain polarity
-  // next and prev should be set to 1 or 2, to match
-  // the pins for d1_* and d2* defined in addDaisyChain
-  void setDaisyChainPolarity(uint8_t next, uint8_t prev);
+  // next and prev should be set to 1 or 2, which matches
+  // the pins for d1_* and d2_* defined in addDaisyChain()
+  void setDaisyChainPolarity(uint8_t prev, uint8_t next);
 
 
 protected:

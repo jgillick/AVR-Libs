@@ -29,36 +29,31 @@ MultidropMaster master(&serial);
 int main() {
   uint8_t targetNode = 0;
 
+  // enable pull-up on RX pin
+  PORTD |= (1 << PD0);
+
   // Setup serial and clock
   serial.begin(9600);
   startClock();
 
-  // Debugging LEDs
-  DDRD |= (1 << PD5) | (1 << PD6);
-  DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-
-  PORTB |= (1 << PB1);
-
   // Wait for all nodes to come online
-  _delay_ms(1000);
+  _delay_ms(200);
 
-  // Set daisy chain
-  master.addDaisyChain(PC3, &DDRC, &PORTC, &PINC,
-                       PC4, &DDRC, &PORTC, &PINC);
-  master.setDaisyChainPolarity(1, 2);
-
-  PORTB &= ~(1 << PB1);
-  PORTB |= (1 << PB2);
-  _delay_ms(1000);
+  // Set daisy chain and the polarity
+  master.addDaisyChain(PC4, &DDRC, &PORTC, &PINC, // prev daisy line
+                       PC3, &DDRC, &PORTC, &PINC, // next daisy line
+                       true);
 
   // Addressing
   addressNodes();
 
   // Now start blinking some LEDs
   while(1) {
+
+    // Start blink message
     master.startMessage(0x01, MultidropMaster::BROADCAST_ADDRESS, 1, true);
 
-    // Send alternating 1s and 0s
+    // Send 0x00 to all nodes except one
     for (uint8_t i = 1; i <= master.nodeNum; i++) {
       if (i == targetNode){
         master.sendData(0x01);
@@ -67,41 +62,38 @@ int main() {
       }
     }
 
+    // Finish message
+    master.finishMessage();
+
+    // Increment the target node to blink
     targetNode++;
     if (targetNode > master.nodeNum) {
-      targetNode = 0;
+      targetNode = (master.nodeNum > 1) ? 1 : 0; // if we only have 1 node, reset to zero
     }
     _delay_ms(1000);
   }
 }
 
 void addressNodes() {
-  uint32_t t = getTime();
+  uint32_t time = getTime();
   MultidropMaster::adr_state_t response;
 
   // Reset all nodes and then start addressing
   master.resetAllNodes();
-  _delay_ms(5);
-  master.startAddressing(t, 2);
+  _delay_ms(10);
+  master.startAddressing(time, 100);
 
   // Wait for all nodes to finish being addressed
   while(1) {
-    t = getTime();
-    response = master.checkForAddresses(t);
+    time = getTime();
+    response = master.checkForAddresses(time);
     if (response != MultidropMaster::ADR_WAITING) {
       break;
     }
   }
 
-  // Finished successfully
-  if (response == MultidropMaster::ADR_DONE) {
-    PORTB &= ~(1 << PB1) & ~(1 << PB2);
-    PORTB |= (1 << PB0);
-  }
   // Error, try again in a few ms
-  else if (response == MultidropMaster::ADR_ERROR) {
-    PORTB &= ~(1 << PB0) & ~(1 << PB2);
-    PORTB |= (1 << PB1);
+  if (response == MultidropMaster::ADR_ERROR) {
     _delay_ms(3);
     addressNodes();
   }
@@ -121,7 +113,7 @@ void startClock() {
 
   TIMSK0 |= (1 << OCIE0A); // enabled timer
   TCCR0B |= (1 << CS01) | (1 << CS00); // prescaler = 64
-  TCCR0A |= ( 1 << WGM01 ); // Timer mode = CTC
+  TCCR0A |= (1 << WGM01); // Timer mode = CTC
 
   // Fire interrupt every 1ms: (CLK_FREQ * seconds) / TIMER_PRESCALER
   OCR0A = (uint16_t)(F_CPU * 1/1000) / 64;

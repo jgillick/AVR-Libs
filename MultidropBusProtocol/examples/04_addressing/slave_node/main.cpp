@@ -15,15 +15,20 @@
 int main() {
   uint8_t ledOn = 0;
 
-  DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-  PORTB |= (1 << PB1);
+  // LED indicator
+  DDRB |= (1 << PB0);
+  PORTB &= ~(1 << PB0);
 
-  // Setup serial
+  // enable pull-up on RX pin
+  PORTD |= (1 << PD0);
+
+  // Setup serial and slave node
   MultidropData485 serial(PD2, &DDRD, &PORTD);
   serial.begin(9600);
 
-  // Setup slave node
   MultidropSlave slave(&serial);
+
+  // Define daisy chain lines and let polarity (next/previous) be determined at runtime
   slave.addDaisyChain(PC3, &DDRC, &PORTC, &PINC,
                       PC4, &DDRC, &PORTC, &PINC);
 
@@ -38,10 +43,8 @@ int main() {
 
       if (ledOn) {
         PORTB |= (1 << PB0);
-        PORTB &= ~(1 << PB1);
       } else {
         PORTB &= ~(1 << PB0);
-        PORTB |= (1 << PB1);
       }
     }
   }
