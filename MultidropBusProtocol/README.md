@@ -3,7 +3,7 @@
 A versatile communication protocol for a multi-drop master/slave bus (like RS485).
 In this protocol, master facilitates all message and responses on the bus.
 
-## Implemenation Quickstart
+## Implementation Quickstart
 
 This is the most basic master/server setup where the slave node address is known and master
 just sends messages. (see the [simple example](/MultidropBusProtocol/examples/01_simple))
