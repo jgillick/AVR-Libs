@@ -58,7 +58,7 @@ There are more complex examples in the [examples directory](/MultidropBusProtoco
 
 ## Communication Protocol Overview
 
-This bus assumes that all nodes have addresses from 1 (master) - 255 (see Addressing section).
+This bus assumes that all nodes have addresses from 0 (master) - 255 (see Addressing section).
 
 ## Message Packet Format
 
@@ -66,7 +66,7 @@ Each message has 4 section:
  * Start: Two bytes signaling the start of the message.
  * Header: Start of message, flags, destination address, command and length
  * Data: The data for the message
- * End: a 16 bit CRC to validate the message
+ * End: a 16 bit CRC to validate the message (see CRC section for encoding rules)
 
 A full message would look something like this:
 
@@ -291,3 +291,7 @@ will be alerted when all nodes have been addressed.
 The direction of the daisy lines are determined dynamically. The node will wait
 to see which side becomes enabled and then assume that is the input daisy line.
 
+## Generating the CRC
+ * The CRC is generated using [`_crc16_update`](http://www.nongnu.org/avr-libc/user-manual/group__util__crc.html#ga95371c87f25b0a2497d9cba13190847f) from avr-libc's `<util/crc16.h>`. 
+ * For each new message, the CRC value is reset to `0xFFFF`.
+ * All message bytes are added to the CRC, excluding the CRC bytes themselves.
