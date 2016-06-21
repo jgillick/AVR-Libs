@@ -8,6 +8,8 @@ In this protocol, master facilitates all message and responses on the bus.
 This is the most basic master/server setup where the slave node address is known and master
 just sends messages. (see the [simple example](/MultidropBusProtocol/examples/01_simple))
 
+![Simple Demo](examples/diagrams/serial-simple.png?raw=true)
+
 ### Slave
 
 ```c
@@ -199,6 +201,8 @@ Length will match normal batch messages, the first length byte will be the numbe
 bus and the second byte will be the data length per node expected in each response.
 
 ## Automatic Addressing
+
+![Simple Demo](examples/diagrams/rs485-daisy.png?raw=true)
 
 You can set a node's address manually (via `setAddress()`) or you can use the library's
 automatic addressing scheme.
