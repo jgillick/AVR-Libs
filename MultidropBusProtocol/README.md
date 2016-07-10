@@ -156,7 +156,7 @@ For example, to send an on/off value to 3 nodes, the message would look somethin
 0x00      - Message for the 1st slave
 0x01      - Message for the 2nd slave
 0x00      - Message for the 3rd slave
-0xF9 0x5B - Message CRC
+0xFE 0xC5 - Message CRC
 ```
 
 In this example the message flag and the address sets it as a broadcast message. Then the
@@ -185,7 +185,7 @@ Then it waits for node 0x05 to respond:
 
 Then master completes the message with the CRC:
 
-`0x46 0xDC`
+`0xE0 0xE4`
 
 
 ### Batch response message
@@ -296,6 +296,6 @@ The direction of the daisy lines are determined dynamically. The node will wait
 to see which side becomes enabled and then assume that is the input daisy line.
 
 ## Generating the CRC
- * The CRC is generated using [`_crc16_update`](http://www.nongnu.org/avr-libc/user-manual/group__util__crc.html#ga95371c87f25b0a2497d9cba13190847f) from avr-libc's `<util/crc16.h>`. 
+ * The CRC is generated using [`_crc16_update`](http://www.nongnu.org/avr-libc/user-manual/group__util__crc.html#ga95371c87f25b0a2497d9cba13190847f) from avr-libc's `<util/crc16.h>`.
  * For each new message, the CRC value is reset to `0xFFFF`.
- * All message bytes are added to the CRC, excluding the CRC bytes themselves.
+ * All message bytes, except the start message bytes (`0xFF 0xFF`) and the CRC bytes themselves, are used to generate the CRC.
