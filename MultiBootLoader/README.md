@@ -10,7 +10,7 @@ in order to notify us of errors.
 
 ## Programming Flow
 
-![Flow Diagram](flow-diagram.png?raw=true)
+<a href="./flow-diagram.png?raw=true"><img src="flow-diagram.png?raw=true" width="80%" /></a>
 
 ## Commands
 
